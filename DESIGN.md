@@ -16,17 +16,19 @@ Home is a Pivot: horizontally swipeable sections, each scrolling vertically on i
 
 ```
  DAYLOGGER                      <- app title, small caps, 12sp, muted
- streaks  meals  travel  +new   <- section headers, 40sp, light, lowercase
+ Streaks  Expenses  Settings    <- section headers, 40sp active, capitalised, light
  ───────────────────────────
  [ active section content, vertical scroll ]
                               [+]  <- app-bar style add button
 ```
 
-**Sections (in order):** `streaks`, one per active expense category (user-ordered), `settings`.
-`+ new category` is the last header item, before the loop returns to the first section.
+**Sections (in order):** `streaks`, `expenses`, `settings`. Always these three.
+- `streaks` lists every streak with today's progress; tapping one opens its calendar (with today's ticks), long-pressing edits it. The bin is listed at the bottom when it has items.
+- `expenses` lists every expense category (user-ordered) with its month total; tapping one opens its calendar, long-pressing edits it. Archived categories stay in the list, marked archived, so they can be restored.
+- `settings` lists Reminders, Backup & Restore and the theme.
 
 **Headers**
-- Active header: full `Ink`. Inactive headers: `Muted`, same size.
+- Active header: full `Ink` at 40sp. Inactive headers: `Muted` at 85% of that, so the active one reads slightly larger. Size and colour ease between the two as the pivot moves.
 - The next header peeks in from the right edge as a swipe hint.
 - Headers move at about half the speed of the content (parallax), so the row slides slower than the page.
 - The row scrolls horizontally when it doesn't fit. Tapping a header jumps to that section.
@@ -38,21 +40,30 @@ Home is a Pivot: horizontally swipeable sections, each scrolling vertically on i
 - Each section keeps its own scroll position when the user swipes away and back.
 
 **Add button**
-- A single circular `+` in the bottom app-bar area, and it acts on the active section: new streak on `streaks`, new entry in the current category on an expense section. Hidden on `settings` and on the `+ new category` header.
+- A single circular `+` bottom-right, in thumb reach, and it acts on the active section: new streak on `streaks` (the form page, which also edits and bins an existing streak), new category on `expenses` (entries are added from inside a category). Hidden on `settings`.
 - No inline add forms on the home page.
+
+**Press-and-hold menu**
+- Holding a streak or category slides a Metro app bar up from the bottom edge: round icon buttons with a small lowercase label (✎ edit, 🗑 bin, 🗄 archive / ↩ restore) under the item's name. Tapping outside, or Back, dismisses it. Deleting for good stays inside the edit page.
+
+**Back to top**
+- A round `↑` button mirrors `+` at the bottom left. It appears once the active section has scrolled past 300dp and scrolls that section to the top.
+
+**One-handed use**
+- The app title sits near the top (about 3% of the height), the headers follow, the section body fills the rest, and `+` sits at the bottom right. Pushed pages keep `OneUiScaffold`, whose large title sits low and collapses on scroll.
 
 ## Typography
 
 | Role | Size | Weight | Notes |
 |---|---|---|---|
-| Pivot header | 40sp | Light | lowercase |
+| Pivot header | 40sp | Light | First letter capitalised |
 | Page title | 32sp | Light | lowercase |
 | List primary | 20sp | Regular | |
 | List secondary | 14sp | Regular | `Muted` |
 | App title | 12sp | Semibold | UPPERCASE, letter-spaced, `Muted` |
 | Body / input | 14–16sp | Regular | |
 
-Font: Segoe UI (Light, Semilight, Regular) on Windows. On Android use the system light sans (`sans-serif-light`). Bundled `OpenSans` stays as the fallback. Use lowercase for headers and titles, not Title Case.
+Font: Segoe UI (Light, Semilight, Regular) on Windows. On Android use the system light sans (`sans-serif-light`). Bundled `OpenSans` stays as the fallback. Page titles are lowercase; pivot headers capitalise only the first letter.
 
 ## Colour
 
@@ -84,7 +95,7 @@ Colours come from `ThemeService` keys and are always bound with `DynamicResource
 
 ## Expense category pages
 
-- **Category settings:** name, subcategories (reorderable list), "amount required" toggle, reminder time, archive and delete actions. Reachable from the `settings` section and by long-pressing a section header.
+- **Category settings** (`CategoryPage`): name, "amount required" toggle, subcategories (reorderable), position on the pivot, archive, and delete (move entries to another category, or delete them too). Reachable by long-pressing a category in the `expenses` list. With id 0 the same page creates a new category (the `+` on `expenses`). Reminder times live on the Reminders page, one row per category.
 - **Entry form:** subcategory selector (chips), amount (required or optional by category), title, tags (free-typed with suggestions from tags used before, shared across categories), note, receipt photo.
 - **Calendar and day pages** reuse the existing `CalendarView` and day-list layout, scoped to the category, restyled flat.
 
@@ -98,5 +109,5 @@ Colours come from `ThemeService` keys and are always bound with `DynamicResource
 ## Out of scope for now
 
 - Charts and analysis (expense distribution by category, subcategory, tag or date range). The data model is designed for it, but no UI yet.
-- Inline home-section content beyond the launcher.
+- Inline home-section content beyond the lists described above.
 - Tablet / landscape-specific pivot layouts. Phone portrait comes first, landscape just stretches.

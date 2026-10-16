@@ -1,58 +1,73 @@
+using DayLogger.Data;
 using DayLogger.Models;
 using DayLogger.Services;
 
 namespace DayLogger.Pages;
 
+/// <summary>One reminder per expense category: a daily nudge, skipped when something is already logged that day.</summary>
 public partial class RemindersPage : ContentPage
 {
     readonly ReminderService _reminders;
-    bool _loading;
+    readonly CategoryRepository _categories;
 
-    public RemindersPage(ReminderService reminders)
+    public RemindersPage(ReminderService reminders, CategoryRepository categories)
     {
         InitializeComponent();
         _reminders = reminders;
+        _categories = categories;
     }
 
-    TimePicker PickerFor(MealType t) => t switch
-    {
-        MealType.Breakfast => BreakfastPicker,
-        MealType.Lunch => LunchPicker,
-        _ => DinnerPicker,
-    };
-
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _loading = true;
-        MealsSwitch.IsToggled = ReminderService.MealsOn;
-        foreach (var t in ReminderService.MealTypes) PickerFor(t).Time = TimeSpan.FromMinutes(ReminderService.MealMinutes(t));
-        ExpensesSwitch.IsToggled = ReminderService.ExpensesOn;
-        ExpensesPicker.Time = TimeSpan.FromMinutes(ReminderService.ExpenseMinutes);
-        ShowEnabled();
-        _loading = false;
+        var all = await _categories.GetAllAsync();
+
+        List.Children.Clear();
+        if (all.Count == 0)
+            List.Children.Add(new Label { Text = "no categories yet: create one from the home pivot (+ new)", Style = (Style)Application.Current!.Resources["Caption"] });
+        foreach (var c in all) List.Children.Add(Row(c));
     }
 
-    void ShowEnabled()
+    View Row(ExpenseCategory category)
     {
-        MealsGrid.IsVisible = MealsSwitch.IsToggled;
-        ExpensesBox.IsVisible = ExpensesSwitch.IsToggled;
-    }
+        var res = Application.Current!.Resources;
+        var toggle = new Switch { IsToggled = category.ReminderOn };
+        var picker = new TimePicker { Time = TimeSpan.FromMinutes(category.ReminderMinutes) };
+        var box = new Border { Padding = new Thickness(12, 0), Style = (Style)res["ControlBox"], Content = picker, IsVisible = category.ReminderOn };
 
-    async void OnChanged(object? sender, EventArgs e)
-    {
-        if (_loading) return;
-        ShowEnabled();
+        async void Changed(object? sender, EventArgs e)
+        {
+            category.ReminderOn = toggle.IsToggled;
+            category.ReminderMinutes = (int)(picker.Time ?? TimeSpan.Zero).TotalMinutes;
+            box.IsVisible = category.ReminderOn;
+            await _categories.SaveAsync(category);
 
-        ReminderService.MealsOn = MealsSwitch.IsToggled;
-        foreach (var t in ReminderService.MealTypes) ReminderService.SetMealMinutes(t, (int)(PickerFor(t).Time ?? TimeSpan.Zero).TotalMinutes);
-        ReminderService.ExpensesOn = ExpensesSwitch.IsToggled;
-        ReminderService.ExpenseMinutes = (int)(ExpensesPicker.Time ?? TimeSpan.Zero).TotalMinutes;
+            StatusLabel.Text = category.ReminderOn && !await _reminders.EnsurePermissionAsync()
+                ? "Notifications are blocked for DayLogger. Allow them in system settings to get reminders."
+                : "";
+            await _reminders.RefreshAllAsync();
+        }
+        toggle.Toggled += Changed;
+        picker.TimeSelected += Changed;
 
-        if ((ReminderService.MealsOn || ReminderService.ExpensesOn) && !await _reminders.EnsurePermissionAsync())
-            StatusLabel.Text = "Notifications are blocked for DayLogger. Allow them in system settings to get reminders.";
-        else
-            StatusLabel.Text = "";
-        await _reminders.RefreshAllAsync();
+        var head = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
+        head.Add(new Label { Text = category.Name.ToUpperInvariant(), Style = (Style)res["Caption"], VerticalOptions = LayoutOptions.Center });
+        head.Add(toggle, 1);
+
+        return new Border
+        {
+            Padding = 12,
+            Style = (Style)res["Section"],
+            Content = new VerticalStackLayout
+            {
+                Spacing = 10,
+                Children =
+                {
+                    head,
+                    new Label { Text = $"Asks you to log in {category.Name.ToLowerInvariant()} once a day, unless you already have.", Style = (Style)res["Caption"] },
+                    box,
+                },
+            },
+        };
     }
 }

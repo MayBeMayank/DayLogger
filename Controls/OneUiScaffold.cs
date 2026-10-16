@@ -51,7 +51,7 @@ public class OneUiScaffold : ContentView
     (bool split, bool below, bool has)? _arranged;
     readonly Grid _bar = new() { HeightRequest = BarHeight, Opacity = 0, InputTransparent = true, VerticalOptions = LayoutOptions.Start };
     readonly Grid _titles = new() { InputTransparent = true };
-    readonly Label _bigTitle = new() { FontSize = LargeSize, FontAttributes = FontAttributes.Bold, HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Start, AnchorX = 0, AnchorY = 0 };
+    readonly Label _bigTitle = new() { FontSize = LargeSize, FontFamily = Metro.LightFont, HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Start, AnchorX = 0, AnchorY = 0 };
     readonly Label _bigSubtitle = new() { Style = (Style)Application.Current!.Resources["Caption"], HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Start };
     readonly Label _back = new() { Text = "←", FontSize = 20, HeightRequest = BarHeight, VerticalTextAlignment = TextAlignment.Center, HorizontalOptions = LayoutOptions.Start, VerticalOptions = LayoutOptions.Start, Padding = new Thickness(16, 0), IsVisible = false };
 
@@ -99,7 +99,7 @@ public class OneUiScaffold : ContentView
 
     void SyncText()
     {
-        _bigTitle.Text = Title;
+        _bigTitle.Text = Title.ToLowerInvariant();
         _bigSubtitle.Text = Subtitle;
         _bigSubtitle.IsVisible = !string.IsNullOrEmpty(Subtitle);
         if (Width > 0) ApplyLayout();

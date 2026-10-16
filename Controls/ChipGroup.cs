@@ -1,11 +1,14 @@
 namespace DayLogger.Controls;
 
-/// <summary>Single-select row of bordered text chips.</summary>
+/// <summary>Single-select row of flat text chips.</summary>
 public class ChipGroup : ContentView
 {
     readonly FlexLayout _row = new() { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap };
     readonly List<(Border Chip, Label Text)> _chips = new();
     int _selected = -1;
+
+    /// <summary>Tapping the selected chip again clears the selection (for optional choices).</summary>
+    public bool AllowDeselect { get; set; }
 
     public event EventHandler? SelectionChanged;
 
@@ -41,7 +44,7 @@ public class ChipGroup : ContentView
             int index = i++;
             var label = new Label { Text = item, FontSize = 13, Padding = new Thickness(10, 7) };
             var chip = new Border { Content = label, Margin = new Thickness(0, 0, 6, 6), Style = (Style)Application.Current!.Resources["ControlBox"] };
-            chip.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => SelectedIndex = index) });
+            chip.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => SelectedIndex = AllowDeselect && _selected == index ? -1 : index) });
             _chips.Add((chip, label));
             _row.Children.Add(chip);
         }

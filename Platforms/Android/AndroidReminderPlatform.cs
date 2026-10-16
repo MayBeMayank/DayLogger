@@ -57,7 +57,7 @@ public class AndroidReminderPlatform : IReminderPlatform
         if (manager.GetNotificationChannel(ChannelId) != null) return;
         manager.CreateNotificationChannel(new NotificationChannel(ChannelId, "Reminders", NotificationImportance.Default)
         {
-            Description = "Streak, meal and expense reminders",
+            Description = "Streak and expense reminders",
         });
     }
 

@@ -3,75 +3,47 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:DayLogger.Controls"
              x:Class="DayLogger.MainPage"
+             Shell.NavBarIsVisible="False"
              Title="DAYLOGGER">
 
-    <Grid>
-    <c:OneUiScaffold Title="DAYLOGGER" Subtitle="what do you want to log?">
-    <VerticalStackLayout Padding="16" Spacing="12">
-        <Label Text="what do you want to log?" Style="{StaticResource Caption}" />
+    <Grid RowDefinitions="Auto,*">
+        <!-- Small app title; the gap above it keeps the headers in comfortable thumb reach. -->
+        <Label x:Name="AppTitle" Text="DAYLOGGER" FontSize="12" FontAttributes="Bold" CharacterSpacing="3"
+               Style="{StaticResource Caption}" Margin="20,40,20,0" />
 
-        <Border Padding="16" Style="{StaticResource Section}">
+        <c:PivotView x:Name="Pivot" Grid.Row="1" Margin="0,4,0,0" SelectedChanged="OnSelectedChanged" />
+
+        <!-- App-bar style add button: acts on whichever section is showing. -->
+        <Border x:Name="AddButton" Grid.Row="1" WidthRequest="60" HeightRequest="60"
+                HorizontalOptions="End" VerticalOptions="End" Margin="0,0,24,28"
+                BackgroundColor="{DynamicResource Paper}" Stroke="{DynamicResource Ink}" StrokeThickness="2"
+                IsVisible="False" SemanticProperties.Description="Add">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
             <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnMealsTapped" />
+                <TapGestureRecognizer Tapped="OnAddTapped" />
             </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="2">
-                        <Label Text="MEALS TRACKER 🍽️" FontAttributes="Bold" FontSize="16" />
-                <Label Text="what you ate, how, and what it cost" Style="{StaticResource Caption}" />
-            </VerticalStackLayout>
+            <Label Text="+" FontSize="34" HorizontalOptions="Center" VerticalOptions="Center"
+                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
         </Border>
 
-        <Border Padding="16" Style="{StaticResource Section}">
+        <!-- Back to the top of a long list. Mirrors the add button on the other side. -->
+        <Border x:Name="TopButton" Grid.Row="1" WidthRequest="60" HeightRequest="60"
+                HorizontalOptions="Start" VerticalOptions="End" Margin="24,0,0,28"
+                BackgroundColor="{DynamicResource Paper}" Stroke="{DynamicResource Ink}" StrokeThickness="2"
+                IsVisible="False" SemanticProperties.Description="Scroll to top">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
             <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnStreaksTapped" />
+                <TapGestureRecognizer Tapped="OnTopTapped" />
             </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="2">
-                <Label Text="STREAKS" FontAttributes="Bold" FontSize="16" />
-                <Label Text="daily habits, ticked off and counted" Style="{StaticResource Caption}" />
-            </VerticalStackLayout>
+            <Label Text="↑" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center"
+                   HorizontalTextAlignment="Center" VerticalTextAlignment="Center" />
         </Border>
 
-        <Border Padding="16" Style="{StaticResource Section}">
-            <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnExpensesTapped" />
-            </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="2">
-                <Label Text="EXPENSES 💸" FontAttributes="Bold" FontSize="16" />
-                <Label Text="what you spent, meals included" Style="{StaticResource Caption}" />
-            </VerticalStackLayout>
-        </Border>
-
-        <Border Padding="16" Style="{StaticResource Section}">
-            <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnRemindersTapped" />
-            </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="2">
-                <Label Text="REMINDERS 🔔" FontAttributes="Bold" FontSize="16" />
-                <Label Text="nudges for meals and expenses" Style="{StaticResource Caption}" />
-            </VerticalStackLayout>
-        </Border>
-
-        <Border Padding="16" Style="{StaticResource Section}">
-            <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnBackupTapped" />
-            </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="2">
-                <Label Text="BACKUP &amp; RESTORE 💾" FontAttributes="Bold" FontSize="16" />
-                <Label Text="save your data to a file, bring it back anywhere" Style="{StaticResource Caption}" />
-            </VerticalStackLayout>
-        </Border>
-
-        <Label Text="more trackers coming soon" Style="{StaticResource Caption}" Margin="0,8,0,0" />
-    </VerticalStackLayout>
-    </c:OneUiScaffold>
-
-    <!-- Theme toggle, icon only, pinned top-right. Tap cycles system / light / dark. -->
-    <Label x:Name="ThemeIcon" FontSize="20" WidthRequest="48" HeightRequest="48"
-           HorizontalOptions="End" VerticalOptions="Start" Margin="0,4,8,0"
-           HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
-           SemanticProperties.Description="Change theme">
-        <Label.GestureRecognizers>
-            <TapGestureRecognizer Tapped="OnThemeTapped" />
-        </Label.GestureRecognizers>
-    </Label>
+        <!-- Press-and-hold menu for list items; sits above everything. -->
+        <c:ActionBar x:Name="Menu" Grid.RowSpan="2" />
     </Grid>
 </ContentPage>

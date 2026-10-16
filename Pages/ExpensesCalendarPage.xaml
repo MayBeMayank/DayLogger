@@ -2,10 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:DayLogger.Controls"
-             x:Class="DayLogger.Pages.ExpensesCalendarPage"
-             Title="EXPENSES">
+             x:Class="DayLogger.Pages.ExpensesCalendarPage">
 
-    <c:OneUiScaffold AsideBelow="True" Title="EXPENSES" Subtitle="everything you spent, meals included">
+    <c:OneUiScaffold x:Name="Scaffold" AsideBelow="True" Title="EXPENSES">
         <c:OneUiScaffold.Aside>
             <VerticalStackLayout Padding="16,0,16,16">
                 <Border Padding="12">

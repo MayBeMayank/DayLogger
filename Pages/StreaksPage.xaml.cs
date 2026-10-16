@@ -5,11 +5,17 @@ using DayLogger.Services;
 
 namespace DayLogger.Pages;
 
+/// <summary>Creates a streak, or edits one when opened with an id (long-press on the home list).</summary>
+[QueryProperty(nameof(IdText), "id")]
 public partial class StreaksPage : ContentPage
 {
     readonly StreakRepository _repo;
     readonly ReminderService _reminders;
     Streak? _editing;
+    int _id;
+    bool _loaded;
+
+    public string IdText { set => _id = int.TryParse(value, out var id) ? id : 0; }
 
     public StreaksPage(StreakRepository repo, ReminderService reminders)
     {
@@ -21,126 +27,27 @@ public partial class StreaksPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await RefreshAsync();
-    }
+        if (_loaded) return; // coming back from a dialog, keep what's typed
+        _loaded = true;
 
-    async Task RefreshAsync()
-    {
-        var streaks = await _repo.GetAllAsync();
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var checks = await _repo.GetDayChecksAsync(today);
-        var monthLogs = await _repo.GetMonthLogsAsync(today.Year, today.Month);
-        var binned = await _repo.BinCountAsync();
-        BinButton.Text = binned > 0 ? $"BIN ({binned})" : "BIN";
-
-        List.Children.Clear();
-        if (streaks.Count == 0)
+        if (_id == 0)
         {
-            List.Children.Add(new Label { Text = "no streaks yet - create one below", Style = (Style)Application.Current!.Resources["Caption"] });
+            NameEntry.FocusSoon();
             return;
         }
-        foreach (var s in streaks)
-        {
-            // Fully completed days this month, not counting today (today is added live as boxes are ticked).
-            var todayKey = MealRepository.Key(today);
-            int before = monthLogs.Count(l => l.StreakId == s.Id && l.Date != todayKey && l.Indices.Count(i => i < s.Frequency) >= s.Frequency);
-            List.Children.Add(BuildCard(s, checks.GetValueOrDefault(s.Id) ?? new HashSet<int>(), today, before));
-        }
-    }
 
-    View BuildCard(Streak streak, HashSet<int> done, DateOnly today, int completedBeforeToday)
-    {
-        var res = Application.Current!.Resources;
-        var progress = new Label { Style = (Style)res["Caption"], VerticalOptions = LayoutOptions.Center };
-        var month = new Label { Style = (Style)res["Caption"], VerticalOptions = LayoutOptions.Center };
-        int daysInMonth = DateTime.DaysInMonth(today.Year, today.Month);
-        void Show(int n)
-        {
-            var bell = ReminderService.Slots(streak).Count is > 0 and var c ? $" · 🔔 {c}x" : "";
-            progress.Text = $"today {n}/{streak.Frequency}{bell} · tap to open calendar";
-            month.Text = $"this month {completedBeforeToday + (n >= streak.Frequency ? 1 : 0)}/{daysInMonth} days";
-        }
-        Show(done.Count(i => i < streak.Frequency));
+        _editing = await _repo.GetAsync(_id);
+        if (_editing == null) { await Shell.Current.GoToAsync(".."); return; }
 
-        var name = new Label { Text = streak.Name, FontAttributes = FontAttributes.Bold, FontSize = 16 };
-
-        var open = new VerticalStackLayout { Spacing = 2, Children = { name, progress, month } };
-        open.GestureRecognizers.Add(new TapGestureRecognizer
-        {
-            Command = new Command(async () => await Shell.Current.GoToAsync($"streak?id={streak.Id}")),
-        });
-
-        var head = new Grid { Children = { open } };
-
-        var ticks = new TickRow();
-        ticks.Set(streak.Frequency, done);
-        ticks.TicksChanged += async (_, ticked) =>
-        {
-            Show(ticked.Count);
-            await _repo.SetChecksAsync(streak.Id, today, ticked);
-        };
-
-        var actions = new CardActions();
-        var reveal = new Reveal { Body = actions };
-        actions.Add("Edit", () => { reveal.IsOpen = false; BeginEdit(streak); });
-        actions.Add("Move to bin", async () => await MoveToBinAsync(streak));
-
-        var card = new Border { Padding = 12, Content = new VerticalStackLayout { Spacing = 10, Children = { head, ticks, reveal } } };
-
-        // Long-press (right-click on desktop) flips the actions open. The title area has its own tap, so it needs the behavior too.
-        foreach (View v in new View[] { card, open })
-        {
-            var press = new LongPressBehavior();
-            press.Pressed += (_, _) => Toggle(reveal);
-            v.Behaviors.Add(press);
-        }
-        return card;
-    }
-
-    Reveal? _openActions;
-
-    // Only one card shows its actions at a time.
-    void Toggle(Reveal reveal)
-    {
-        if (_openActions != null && _openActions != reveal) _openActions.IsOpen = false;
-        reveal.IsOpen = !reveal.IsOpen;
-        _openActions = reveal.IsOpen ? reveal : null;
-    }
-
-    async Task MoveToBinAsync(Streak streak)
-    {
-        await _repo.MoveToBinAsync(streak);
-        _reminders.CancelStreak(streak.Id);
-        if (_editing?.Id == streak.Id) ResetForm();
-        await RefreshAsync();
-    }
-
-    void BeginEdit(Streak streak)
-    {
-        _editing = streak;
-        FormTitle.Text = "EDIT STREAK";
+        Scaffold.Title = "edit streak";
         SaveButton.Text = "UPDATE";
-        CancelButton.IsVisible = true;
-        NameEntry.Text = streak.Name;
-        FrequencyEntry.Text = streak.Frequency.ToString();
-        ReminderSlider.Maximum = Math.Max(1, streak.Frequency);
-        ReminderSlider.Value = Math.Min(streak.ReminderCount, streak.Frequency);
-        StartPicker.Time = TimeSpan.FromMinutes(streak.WindowStart);
-        EndPicker.Time = TimeSpan.FromMinutes(streak.WindowEnd);
-        NameEntry.Focus();
-    }
-
-    void ResetForm()
-    {
-        _editing = null;
-        FormTitle.Text = "NEW STREAK";
-        SaveButton.Text = "SAVE";
-        CancelButton.IsVisible = false;
-        NameEntry.Text = "";
-        FrequencyEntry.Text = "1";
-        ReminderSlider.Value = 0;
-        StartPicker.Time = TimeSpan.FromHours(8);
-        EndPicker.Time = TimeSpan.FromHours(21);
+        BinButton.IsVisible = true;
+        NameEntry.Text = _editing.Name;
+        FrequencyEntry.Text = _editing.Frequency.ToString();
+        ReminderSlider.Maximum = Math.Max(1, _editing.Frequency);
+        ReminderSlider.Value = Math.Min(_editing.ReminderCount, _editing.Frequency);
+        StartPicker.Time = TimeSpan.FromMinutes(_editing.WindowStart);
+        EndPicker.Time = TimeSpan.FromMinutes(_editing.WindowEnd);
     }
 
     // The slider tops out at the number of ticks per day: more reminders than ticks makes no sense.
@@ -178,11 +85,14 @@ public partial class StreaksPage : ContentPage
         await _repo.SaveAsync(streak);
         if (streak.ReminderCount > 0) await _reminders.EnsurePermissionAsync();
         await _reminders.RefreshAllAsync();
-        ResetForm();
-        await RefreshAsync();
+        await Shell.Current.GoToAsync("..");
     }
 
-    void OnCancelClicked(object? sender, EventArgs e) => ResetForm();
-
-    async void OnBinClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync("streakbin");
+    async void OnBinClicked(object? sender, EventArgs e)
+    {
+        if (_editing == null) return;
+        await _repo.MoveToBinAsync(_editing);
+        _reminders.CancelStreak(_editing.Id);
+        await Shell.Current.GoToAsync("..");
+    }
 }

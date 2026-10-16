@@ -37,7 +37,7 @@ public partial class StreakDetailPage : ContentPage
     }
 
     HashSet<int> TicksOn(DateOnly d) =>
-        _checks.GetValueOrDefault(MealRepository.Key(d))?.Where(i => i < _streak!.Frequency).ToHashSet() ?? new HashSet<int>();
+        _checks.GetValueOrDefault(DateKey.Of(d))?.Where(i => i < _streak!.Frequency).ToHashSet() ?? new HashSet<int>();
 
     int CountOn(DateOnly d) => TicksOn(d).Count;
 
@@ -133,7 +133,7 @@ public partial class StreakDetailPage : ContentPage
     {
         if (_streak == null) return;
         var day = _day;
-        _checks[MealRepository.Key(day)] = ticked.ToHashSet();
+        _checks[DateKey.Of(day)] = ticked.ToHashSet();
         await _repo.SetChecksAsync(_streak.Id, day, ticked);
         ShowMonth();
     }

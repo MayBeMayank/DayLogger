@@ -13,7 +13,14 @@ public class Expense : INotifyPropertyChanged
     [Indexed]
     public string Date { get; set; } = "";
 
+    [Indexed]
+    public int CategoryId { get; set; }
+
+    public int? SubcategoryId { get; set; }
+
     public string Title { get; set; } = "";
+
+    /// <summary>0 means "no amount" (allowed when the category doesn't require one).</summary>
     public double Amount { get; set; }
     public string? Description { get; set; }
 
@@ -21,6 +28,10 @@ public class Expense : INotifyPropertyChanged
     public string? Receipt { get; set; }
 
     public long CreatedTicks { get; set; }
+
+    /// <summary>Filled in by the repository when entries are loaded.</summary>
+    [Ignore] public List<string> Tags { get; set; } = new();
+    [Ignore] public string? SubcategoryName { get; set; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -42,26 +53,18 @@ public class Expense : INotifyPropertyChanged
         }
     }
 
-    bool _showActions;
-
-    /// <summary>UI-only: long-press reveals the card's actions.</summary>
-    [Ignore]
-    public bool ShowActions
-    {
-        get => _showActions;
-        set
-        {
-            if (_showActions == value) return;
-            _showActions = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowActions)));
-        }
-    }
-
     [Ignore] public bool ShowDescription => IsExpanded && HasDescription;
     [Ignore] public bool ShowReceipt => IsExpanded && HasReceipt;
     [Ignore] public ImageSource? ReceiptImage => HasReceipt && _everExpanded ? ImageSource.FromFile(ExpenseRepository.ReceiptPath(Receipt!)) : null;
 
-    [Ignore] public string AmountText => Money.Format(Amount);
+    [Ignore] public string AmountText => Amount > 0 ? Money.Format(Amount) : "";
+
+    /// <summary>"breakfast · #home #quick", whichever parts exist.</summary>
+    [Ignore]
+    public string Detail => string.Join(" · ", new[] { SubcategoryName, Tags.Count > 0 ? string.Join(" ", Tags.Select(t => "#" + t)) : null }
+        .Where(s => !string.IsNullOrEmpty(s)));
+
+    [Ignore] public bool HasDetail => Detail.Length > 0;
     [Ignore] public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
     [Ignore] public bool HasReceipt => !string.IsNullOrEmpty(Receipt);
     [Ignore] public string ReceiptMark => HasReceipt ? "📎" : "";

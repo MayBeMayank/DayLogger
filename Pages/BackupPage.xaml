@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             SafeAreaEdges="SoftInput"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:DayLogger.Controls"
              x:Class="DayLogger.Pages.BackupPage"
@@ -19,7 +20,7 @@
             <Border Padding="12">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="BACK UP" Style="{StaticResource Caption}" />
-                    <Label Text="Meals, expenses with receipts, streaks and their history, and the bin. Then pick where to send the file: Drive, email, chat, nearby device." />
+                    <Label Text="Expenses by category with receipts, streaks and their history, and the bin. Then pick where to send the file: Drive, email, chat, nearby device." />
                     <Button x:Name="BackupButton" Style="{StaticResource PrimaryButton}" Text="CREATE BACKUP" Clicked="OnBackupClicked" />
                 </VerticalStackLayout>
             </Border>

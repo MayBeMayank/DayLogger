@@ -7,35 +7,7 @@
 
     <c:OneUiScaffold Title="REMINDERS" Subtitle="gentle nudges, only when something is still undone">
         <VerticalStackLayout Padding="16" Spacing="14">
-            <Border Padding="12" Style="{StaticResource Section}">
-                <VerticalStackLayout Spacing="10">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="MEALS" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                        <Switch x:Name="MealsSwitch" Grid.Column="1" Toggled="OnChanged" />
-                    </Grid>
-                    <Label Text="Asks you to log a meal at these times, unless it's already logged today." Style="{StaticResource Caption}" />
-                    <Grid x:Name="MealsGrid" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-                        <Label Text="breakfast" VerticalOptions="Center" />
-                        <Border Grid.Column="1" Padding="12,0" Style="{StaticResource ControlBox}"><TimePicker x:Name="BreakfastPicker" TimeSelected="OnChanged" /></Border>
-                        <Label Grid.Row="1" Text="lunch" VerticalOptions="Center" />
-                        <Border Grid.Row="1" Grid.Column="1" Padding="12,0" Style="{StaticResource ControlBox}"><TimePicker x:Name="LunchPicker" TimeSelected="OnChanged" /></Border>
-                        <Label Grid.Row="2" Text="dinner" VerticalOptions="Center" />
-                        <Border Grid.Row="2" Grid.Column="1" Padding="12,0" Style="{StaticResource ControlBox}"><TimePicker x:Name="DinnerPicker" TimeSelected="OnChanged" /></Border>
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
-
-            <Border Padding="12" Style="{StaticResource Section}">
-                <VerticalStackLayout Spacing="10">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="EXPENSES" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                        <Switch x:Name="ExpensesSwitch" Grid.Column="1" Toggled="OnChanged" />
-                    </Grid>
-                    <Label Text="One nudge a day, unless you've already logged an expense." Style="{StaticResource Caption}" />
-                    <Border x:Name="ExpensesBox" Padding="12,0" Style="{StaticResource ControlBox}"><TimePicker x:Name="ExpensesPicker" TimeSelected="OnChanged" /></Border>
-                </VerticalStackLayout>
-            </Border>
-
+            <VerticalStackLayout x:Name="List" Spacing="14" />
             <Label Text="Streak reminders are set on each streak, under STREAKS." Style="{StaticResource Caption}" />
             <Label x:Name="StatusLabel" Style="{StaticResource Caption}" />
         </VerticalStackLayout>

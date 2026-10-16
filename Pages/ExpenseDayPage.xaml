@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             SafeAreaEdges="SoftInput"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:DayLogger.Controls"
              xmlns:m="clr-namespace:DayLogger.Models"
@@ -13,36 +14,23 @@
         </VerticalStackLayout>
     </Shell.TitleView>
 
+    <Grid>
     <c:OneUiScaffold x:Name="Scaffold">
         <c:OneUiScaffold.Aside>
             <VerticalStackLayout Padding="16,16,16,0" Spacing="8">
-                <!-- Meals logged this day count towards the total; tap to open them. -->
-                <Border x:Name="MealsCard" Padding="12" IsVisible="False">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnMealsCardTapped" />
-                    </Border.GestureRecognizers>
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <VerticalStackLayout Spacing="2">
-                            <Label Text="🍽️ MEALS" Style="{StaticResource Caption}" />
-                            <Label x:Name="MealsLabel" />
-                        </VerticalStackLayout>
-                        <Label x:Name="MealsAmountLabel" Grid.Column="1" VerticalOptions="Center" FontAttributes="Bold" />
-                    </Grid>
-                </Border>
-
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Expenses, Source={x:Reference Root}}" Spacing="8">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="m:Expense">
                             <Border Padding="12">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnExpenseTapped" />
-                                </Border.GestureRecognizers>
                                 <Border.Behaviors>
-                                    <c:LongPressBehavior Pressed="OnExpenseLongPressed" />
+                                    <c:LongPressBehavior HandleTap="True" Tapped="OnExpenseTapped" Pressed="OnExpenseLongPressed" />
                                 </Border.Behaviors>
                                 <VerticalStackLayout Spacing="8">
                                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                        <Label Text="{Binding Title}" VerticalOptions="Center" />
+                                        <VerticalStackLayout Spacing="2">
+                                            <Label Text="{Binding Title}" />
+                                            <Label Text="{Binding Detail}" IsVisible="{Binding HasDetail}" Style="{StaticResource Caption}" />
+                                        </VerticalStackLayout>
                                         <Label Grid.Column="1" Text="{Binding ReceiptMark}" VerticalOptions="Center" />
                                         <Label Grid.Column="2" Text="{Binding AmountText}" VerticalOptions="Center" FontAttributes="Bold" />
                                     </Grid>
@@ -51,9 +39,6 @@
                                             <Label Text="{Binding Description}" IsVisible="{Binding HasDescription}" Style="{StaticResource Caption}" />
                                             <Image Source="{Binding ReceiptImage}" IsVisible="{Binding HasReceipt}" HeightRequest="180" Aspect="AspectFit" />
                                         </VerticalStackLayout>
-                                    </c:Reveal>
-                                    <c:Reveal IsOpen="{Binding ShowActions}">
-                                        <c:CardActions ActionA="Edit" ActionAInvoked="OnEditAction" ActionB="Delete" ActionBInvoked="OnDeleteAction" />
                                     </c:Reveal>
                                 </VerticalStackLayout>
                             </Border>
@@ -66,12 +51,18 @@
         <VerticalStackLayout Padding="16">
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
-                    <Label x:Name="FormTitle" Text="NEW EXPENSE" Style="{StaticResource Caption}" />
+                    <Label x:Name="FormTitle" Text="NEW ENTRY" Style="{StaticResource Caption}" />
+                    <c:ChipGroup x:Name="SubChips" AllowDeselect="True" IsVisible="False" />
                     <Grid ColumnDefinitions="2*,*" ColumnSpacing="8">
                         <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="TitleEntry" Placeholder="title" ReturnType="Next" /></Border>
                         <Border Grid.Column="1" Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="AmountEntry" Placeholder="amount" Keyboard="Numeric" /></Border>
                     </Grid>
                     <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="DescriptionEntry" Placeholder="description (optional)" /></Border>
+
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}">
+                        <Entry x:Name="TagsEntry" Placeholder="tags (optional): home, quick" TextChanged="OnTagsChanged" />
+                    </Border>
+                    <FlexLayout x:Name="TagSuggestions" Wrap="Wrap" />
 
                     <Label Text="RECEIPT (OPTIONAL)" Style="{StaticResource Caption}" />
                     <Border x:Name="ReceiptBox" IsVisible="False" Padding="4" Style="{StaticResource ControlBox}">
@@ -91,4 +82,8 @@
             </Border>
         </VerticalStackLayout>
     </c:OneUiScaffold>
+
+    <!-- Press-and-hold menu for an entry (edit, delete). -->
+    <c:ActionBar x:Name="Menu" />
+    </Grid>
 </ContentPage>

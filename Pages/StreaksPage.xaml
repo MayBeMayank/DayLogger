@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             SafeAreaEdges="SoftInput"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:c="clr-namespace:DayLogger.Controls"
              x:Class="DayLogger.Pages.StreaksPage"
              Title="STREAKS">
 
-    <c:OneUiScaffold Title="STREAKS" Subtitle="tick off anything, every day">
-        <c:OneUiScaffold.Aside>
-            <VerticalStackLayout Padding="16,16,16,0">
-                <VerticalStackLayout x:Name="List" Spacing="8" />
-            </VerticalStackLayout>
-        </c:OneUiScaffold.Aside>
+    <c:OneUiScaffold x:Name="Scaffold" Title="NEW STREAK" Subtitle="tick off anything, every day">
 
         <VerticalStackLayout Padding="16">
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
-                    <Label x:Name="FormTitle" Text="NEW STREAK" Style="{StaticResource Caption}" />
                     <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="name (e.g. Keep Hydrated)" ReturnType="Next" /></Border>
                     <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="FrequencyEntry" Placeholder="times per day (e.g. 12)" Keyboard="Numeric" Text="1" TextChanged="OnFrequencyChanged" /></Border>
 
@@ -28,14 +23,11 @@
                         <Border Grid.Column="3" Padding="12,0" Style="{StaticResource ControlBox}"><TimePicker x:Name="EndPicker" Time="21:00:00" /></Border>
                     </Grid>
 
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <Button x:Name="SaveButton" Style="{StaticResource PrimaryButton}" Text="SAVE" Clicked="OnSaveClicked" />
-                        <Button x:Name="CancelButton" Grid.Column="1" Text="CANCEL" Clicked="OnCancelClicked" IsVisible="False" />
-                    </Grid>
+                    <Button x:Name="SaveButton" Style="{StaticResource PrimaryButton}" Text="SAVE" Clicked="OnSaveClicked" />
                 </VerticalStackLayout>
             </Border>
 
-            <Button x:Name="BinButton" Margin="0,14,0,0" Text="BIN" Clicked="OnBinClicked" />
+            <Button x:Name="BinButton" Margin="0,14,0,0" Text="MOVE TO BIN" Clicked="OnBinClicked" IsVisible="False" />
         </VerticalStackLayout>
     </c:OneUiScaffold>
 </ContentPage>

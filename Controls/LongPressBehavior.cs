@@ -12,6 +12,14 @@ public class LongPressBehavior : Behavior<View>
     /// <summary>Sender is the view the behavior is attached to (so its BindingContext is the card's item).</summary>
     public event EventHandler? Pressed;
 
+    /// <summary>
+    /// Raise <see cref="Tapped"/> on a plain tap. Use this instead of a TapGestureRecognizer on the same view: on Android
+    /// a recognizer swallows the touch events, so the native long-press never gets to fire.
+    /// </summary>
+    public bool HandleTap { get; set; }
+
+    public event EventHandler? Tapped;
+
     protected override void OnAttachedTo(View bindable)
     {
         base.OnAttachedTo(bindable);
@@ -40,6 +48,8 @@ public class LongPressBehavior : Behavior<View>
         _unhook = null;
     }
 
+    void RaiseTap() => Tapped?.Invoke(_view, EventArgs.Empty);
+
     void Raise()
     {
         try { HapticFeedback.Default.Perform(HapticFeedbackType.LongPress); } catch { /* not supported */ }
@@ -57,7 +67,14 @@ public class LongPressBehavior : Behavior<View>
             v.LongClickable = true;
             EventHandler<Android.Views.View.LongClickEventArgs> h = (_, e) => { Raise(); e.Handled = true; };
             v.LongClick += h;
-            _unhook = () => v.LongClick -= h;
+            EventHandler? click = null;
+            if (HandleTap)
+            {
+                v.Clickable = true;
+                click = (_, _) => RaiseTap();
+                v.Click += click;
+            }
+            _unhook = () => { v.LongClick -= h; if (click != null) v.Click -= click; };
         }
 #elif IOS || MACCATALYST
         if (platform is UIKit.UIView v)
@@ -67,7 +84,13 @@ public class LongPressBehavior : Behavior<View>
                 if (r.State == UIKit.UIGestureRecognizerState.Began) Raise();
             });
             v.AddGestureRecognizer(g);
-            _unhook = () => v.RemoveGestureRecognizer(g);
+            UIKit.UITapGestureRecognizer? tap = null;
+            if (HandleTap)
+            {
+                tap = new UIKit.UITapGestureRecognizer(_ => RaiseTap());
+                v.AddGestureRecognizer(tap);
+            }
+            _unhook = () => { v.RemoveGestureRecognizer(g); if (tap != null) v.RemoveGestureRecognizer(tap); };
         }
 #elif WINDOWS
         if (platform is Microsoft.UI.Xaml.UIElement el)
@@ -77,9 +100,11 @@ public class LongPressBehavior : Behavior<View>
             {
                 if (e.HoldingState == Microsoft.UI.Input.HoldingState.Started) Raise();
             };
+            Microsoft.UI.Xaml.Input.TappedEventHandler tap = (_, _) => RaiseTap();
             el.RightTapped += right;
             el.Holding += hold;
-            _unhook = () => { el.RightTapped -= right; el.Holding -= hold; };
+            if (HandleTap) el.Tapped += tap;
+            _unhook = () => { el.RightTapped -= right; el.Holding -= hold; if (HandleTap) el.Tapped -= tap; };
         }
 #endif
     }

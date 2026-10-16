@@ -65,7 +65,7 @@ public partial class BackupPage : ContentPage
             var r = await Task.Run(() => _backup.RestoreAsync(bytes, password));
             Busy(false, r.Total == 0
                 ? "nothing new: everything in that backup is already here"
-                : $"restored {r.Meals} meals · {r.Expenses} expenses · {r.Streaks} streaks · {r.TickDays} days of ticks. Everything you already had was kept.");
+                : $"restored {r.Categories} categories · {r.Expenses} expenses · {r.Streaks} streaks · {r.TickDays} days of ticks. Everything you already had was kept.");
         }
         catch (PasswordRequiredException ex)
         {

@@ -69,7 +69,7 @@ public class StreakRepository
     public async Task<Dictionary<int, HashSet<int>>> GetDayChecksAsync(DateOnly day)
     {
         var db = await Db();
-        var rows = await db.QueryAsync<StreakLog>("SELECT * FROM StreakLog WHERE Date = ?", MealRepository.Key(day));
+        var rows = await db.QueryAsync<StreakLog>("SELECT * FROM StreakLog WHERE Date = ?", DateKey.Of(day));
         return rows.ToDictionary(r => r.StreakId, r => r.Indices);
     }
 
@@ -77,8 +77,8 @@ public class StreakRepository
     public async Task<List<StreakLog>> GetMonthLogsAsync(int year, int month)
     {
         var db = await Db();
-        var from = MealRepository.Key(new DateOnly(year, month, 1));
-        var to = MealRepository.Key(new DateOnly(year, month, DateTime.DaysInMonth(year, month)));
+        var from = DateKey.Of(new DateOnly(year, month, 1));
+        var to = DateKey.Of(new DateOnly(year, month, DateTime.DaysInMonth(year, month)));
         return await db.QueryAsync<StreakLog>("SELECT * FROM StreakLog WHERE Date >= ? AND Date <= ?", from, to);
     }
 
@@ -93,7 +93,7 @@ public class StreakRepository
     public async Task SetChecksAsync(int streakId, DateOnly day, IReadOnlyCollection<int> ticked)
     {
         var db = await Db();
-        var key = MealRepository.Key(day);
+        var key = DateKey.Of(day);
         var existing = (await db.QueryAsync<StreakLog>("SELECT * FROM StreakLog WHERE StreakId = ? AND Date = ?", streakId, key)).FirstOrDefault();
         if (ticked.Count == 0)
         {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             SafeAreaEdges="SoftInput"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:DayLogger.Controls"
+             x:Class="DayLogger.Pages.CategoryPage"
+             Title="CATEGORY">
+
+    <c:OneUiScaffold x:Name="Scaffold" Title="CATEGORY" Subtitle="subcategories, order, archive">
+        <VerticalStackLayout Padding="16" Spacing="14">
+            <Border Padding="12" Style="{StaticResource Section}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="NAME" Style="{StaticResource Caption}" />
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="name" /></Border>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="amount required" VerticalOptions="Center" />
+                        <Switch x:Name="AmountSwitch" Grid.Column="1" />
+                    </Grid>
+                    <Label Text="Off lets you save an entry without an amount, like a meal you cooked." Style="{StaticResource Caption}" />
+
+                    <Label Text="SUBCATEGORIES" Style="{StaticResource Caption}" />
+                    <VerticalStackLayout x:Name="SubList" Spacing="6" />
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NewSubEntry" Placeholder="subcategories, comma separated (breakfast, lunch)" ReturnType="Done" Completed="OnAddSubClicked" /></Border>
+                        <Button Grid.Column="1" Text="ADD" Clicked="OnAddSubClicked" />
+                    </Grid>
+
+                    <Label x:Name="StatusLabel" Style="{StaticResource Caption}" />
+                    <Button Style="{StaticResource PrimaryButton}" Text="SAVE" Clicked="OnSaveClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <VerticalStackLayout x:Name="ExistingOnly" Spacing="14">
+                <Label Text="POSITION IN THE EXPENSES LIST" Style="{StaticResource Caption}" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Text="← EARLIER" Clicked="OnEarlierClicked" />
+                    <Button Grid.Column="1" Text="LATER →" Clicked="OnLaterClicked" />
+                </Grid>
+
+                <Button x:Name="ArchiveButton" Text="ARCHIVE" Clicked="OnArchiveClicked" />
+                <Button Text="DELETE…" Clicked="OnDeleteClicked" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </c:OneUiScaffold>
+</ContentPage>

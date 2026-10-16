@@ -6,7 +6,7 @@ namespace DayLogger.Controls;
 public record DayBadge(string? Top, string? Bottom, double Fill = 0);
 
 /// <summary>
-/// General-purpose month calendar. Knows nothing about meals: the host supplies per-day badges
+/// General-purpose month calendar. Knows nothing about expenses: the host supplies per-day badges
 /// via <see cref="SetBadges"/> and reacts to <see cref="DaySelected"/> / <see cref="MonthChanged"/>.
 /// </summary>
 public class CalendarView : ContentView
@@ -114,7 +114,7 @@ public class CalendarView : ContentView
                 Content = content,
                 Padding = 0,
                 StrokeThickness = isSelected ? 2 : 1,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = new CornerRadius(10) },
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = new CornerRadius(0) },
             };
             cell.SetDynamicResource(Border.StrokeProperty, isSelected ? "Primary" : "Faint");
             cell.SetDynamicResource(VisualElement.BackgroundColorProperty, isToday ? "Accent" : "Paper");

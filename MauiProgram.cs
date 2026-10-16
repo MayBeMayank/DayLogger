@@ -11,8 +11,11 @@ namespace DayLogger
         {
             var builder = MauiApp.CreateBuilder();
             builder.UseMauiApp<App>();
+#if ANDROID || WINDOWS
+            builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.SwipeHost, SwipeHostHandler>());
+#endif
 
-            builder.Services.AddSingleton<MealRepository>();
+            builder.Services.AddSingleton<CategoryRepository>();
             builder.Services.AddSingleton<StreakRepository>();
             builder.Services.AddSingleton<ExpenseRepository>();
             builder.Services.AddSingleton<BackupService>();
@@ -28,8 +31,7 @@ namespace DayLogger
             builder.Services.AddTransient<BackupPage>();
             builder.Services.AddTransient<ExpensesCalendarPage>();
             builder.Services.AddTransient<ExpenseDayPage>();
-            builder.Services.AddTransient<MealsCalendarPage>();
-            builder.Services.AddTransient<MealDayPage>();
+            builder.Services.AddTransient<CategoryPage>();
             builder.Services.AddTransient<StreaksPage>();
             builder.Services.AddTransient<StreakDetailPage>();
             builder.Services.AddTransient<StreakBinPage>();

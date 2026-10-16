@@ -12,6 +12,9 @@ public static class ThemeService
 {
     const string ModePref = "theme.mode";
 
+    /// <summary>Raised after the colour keys were refreshed, for views that mix colours themselves.</summary>
+    public static event Action? Changed;
+
     public static ThemeMode Mode
     {
         get => (ThemeMode)Preferences.Get(ModePref, (int)ThemeMode.System);
@@ -54,6 +57,7 @@ public static class ThemeService
         res["Accent"] = p.Accent;
         res["PrimaryFill"] = p.Primary.WithAlpha(0.35f);
         res["PrimaryFillFull"] = p.Primary.WithAlpha(0.65f);
+        Changed?.Invoke();
     }
 }
 

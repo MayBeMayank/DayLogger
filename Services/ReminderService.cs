@@ -16,7 +16,7 @@ public interface IReminderPlatform
 }
 
 /// <summary>
-/// Local reminders for streaks, meals and expenses. Each reminder key ("streak:5", "meal:1", "expense") holds a single
+/// Local reminders for streaks and expense categories. Each reminder key ("streak:5", "cat:2") holds a single
 /// pending alarm for its next time; when it fires, the message is decided from today's data (nothing is shown if the
 /// thing is already done) and the following alarm is scheduled.
 /// </summary>
@@ -24,28 +24,20 @@ public class ReminderService
 {
     readonly IReminderPlatform _platform;
     readonly StreakRepository _streaks;
-    readonly MealRepository _meals;
+    readonly CategoryRepository _categories;
     readonly ExpenseRepository _expenses;
 
-    public ReminderService(IReminderPlatform platform, StreakRepository streaks, MealRepository meals, ExpenseRepository expenses)
+    // Alarm keys from before categories existed; cancelled so none keeps firing after the update.
+    static readonly string[] LegacyKeys = { "meal:0", "meal:1", "meal:2", "expense" };
+
+    public ReminderService(IReminderPlatform platform, StreakRepository streaks, CategoryRepository categories, ExpenseRepository expenses)
     {
         _platform = platform;
         _streaks = streaks;
-        _meals = meals;
+        _categories = categories;
         _expenses = expenses;
         _platform.Fired = HandleFiredAsync;
     }
-
-    // Meal reminders cover these types, in this order.
-    public static readonly MealType[] MealTypes = { MealType.Breakfast, MealType.Lunch, MealType.Dinner };
-    static readonly int[] DefaultMealMinutes = { 8 * 60 + 30, 13 * 60, 20 * 60 };
-
-    public static bool MealsOn { get => Preferences.Get("remind.meals", false); set => Preferences.Set("remind.meals", value); }
-    public static int MealMinutes(MealType t) => Preferences.Get($"remind.meal.{(int)t}", DefaultMealMinutes[(int)t]);
-    public static void SetMealMinutes(MealType t, int minutes) => Preferences.Set($"remind.meal.{(int)t}", minutes);
-
-    public static bool ExpensesOn { get => Preferences.Get("remind.expenses", false); set => Preferences.Set("remind.expenses", value); }
-    public static int ExpenseMinutes { get => Preferences.Get("remind.expenses.time", 21 * 60 + 30); set => Preferences.Set("remind.expenses.time", value); }
 
     /// <summary>Minutes after midnight of each reminder in a day: first at the window start, last at its end, evenly between.</summary>
     public static IReadOnlyList<int> Slots(Streak s)
@@ -84,17 +76,18 @@ public class ReminderService
         foreach (var s in await _streaks.GetAllAsync()) Plan($"streak:{s.Id}", Slots(s));
         foreach (var s in await _streaks.GetBinAsync()) _platform.Cancel($"streak:{s.Id}");
 
-        foreach (var t in MealTypes)
-        {
-            if (MealsOn) Plan($"meal:{(int)t}", new[] { MealMinutes(t) });
-            else _platform.Cancel($"meal:{(int)t}");
-        }
+        foreach (var key in LegacyKeys) _platform.Cancel(key);
 
-        if (ExpensesOn) Plan("expense", new[] { ExpenseMinutes });
-        else _platform.Cancel("expense");
+        foreach (var c in await _categories.GetAllAsync(includeArchived: true))
+        {
+            if (c.ReminderOn && !c.Archived) Plan($"cat:{c.Id}", new[] { c.ReminderMinutes });
+            else _platform.Cancel($"cat:{c.Id}");
+        }
     }
 
     public void CancelStreak(int id) => _platform.Cancel($"streak:{id}");
+
+    public void CancelCategory(int id) => _platform.Cancel($"cat:{id}");
 
     public async Task HandleFiredAsync(string key)
     {
@@ -114,21 +107,13 @@ public class ReminderService
                         _platform.Show(key, s.Name, $"{s.Frequency - done} left today · {done}/{s.Frequency} done");
                     break;
                 }
-                case "meal" when int.TryParse(parts[1], out var type):
+                case "cat" when int.TryParse(parts[1], out var categoryId):
                 {
-                    if (!MealsOn) { _platform.Cancel(key); return; }
-                    var t = (MealType)type;
-                    Plan(key, new[] { MealMinutes(t) });
-                    if (!(await _meals.GetDayAsync(today)).Any(m => m.Type == t))
-                        _platform.Show(key, "DayLogger", $"Log your {t.ToString().ToLowerInvariant()}?");
-                    break;
-                }
-                case "expense":
-                {
-                    if (!ExpensesOn) { _platform.Cancel(key); return; }
-                    Plan(key, new[] { ExpenseMinutes });
-                    if ((await _expenses.GetDayAsync(today)).Count == 0)
-                        _platform.Show(key, "DayLogger", "Anything to log in expenses today?");
+                    var c = await _categories.GetAsync(categoryId);
+                    if (c == null || c.Archived || !c.ReminderOn) { _platform.Cancel(key); return; }
+                    Plan(key, new[] { c.ReminderMinutes });
+                    if ((await _expenses.GetDayAsync(c.Id, today)).Count == 0)
+                        _platform.Show(key, "DayLogger", $"Anything to log in {c.Name.ToLowerInvariant()} today?");
                     break;
                 }
             }

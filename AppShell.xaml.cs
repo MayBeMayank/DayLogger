@@ -7,10 +7,9 @@ namespace DayLogger
         public AppShell()
         {
             InitializeComponent();
-            Routing.RegisterRoute("meals", typeof(MealsCalendarPage));
-            Routing.RegisterRoute("mealday", typeof(MealDayPage));
             Routing.RegisterRoute("expenses", typeof(ExpensesCalendarPage));
             Routing.RegisterRoute("expenseday", typeof(ExpenseDayPage));
+            Routing.RegisterRoute("category", typeof(CategoryPage));
             Routing.RegisterRoute("backup", typeof(BackupPage));
             Routing.RegisterRoute("reminders", typeof(RemindersPage));
             Routing.RegisterRoute("streaks",typeof(StreaksPage));

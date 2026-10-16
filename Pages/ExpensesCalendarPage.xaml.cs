@@ -4,47 +4,51 @@ using DayLogger.Models;
 
 namespace DayLogger.Pages;
 
+/// <summary>Month calendar of one expense category; a day opens that category's day page.</summary>
+[QueryProperty(nameof(CategoryIdText), "cat")]
 public partial class ExpensesCalendarPage : ContentPage
 {
     readonly ExpenseRepository _expenses;
-    readonly MealRepository _meals;
+    readonly CategoryRepository _categories;
+    ExpenseCategory? _category;
 
-    public ExpensesCalendarPage(ExpenseRepository expenses, MealRepository meals)
+    public string CategoryIdText { set => _categoryId = int.TryParse(value, out var id) ? id : 0; }
+    int _categoryId;
+
+    public ExpensesCalendarPage(ExpenseRepository expenses, CategoryRepository categories)
     {
         InitializeComponent();
         _expenses = expenses;
-        _meals = meals;
+        _categories = categories;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _category = await _categories.GetAsync(_categoryId);
+        if (_category == null) { await Shell.Current.GoToAsync(".."); return; }
+        Scaffold.Title = _category.Name;
+        Scaffold.Subtitle = "tap a day to log or review";
         await LoadMonthAsync();
     }
 
     async Task LoadMonthAsync()
     {
+        if (_category == null) return;
         var month = Calendar.Month;
-        var expenses = await _expenses.GetMonthAsync(month.Year, month.Month);
-        var meals = (await _meals.GetMonthAsync(month.Year, month.Month)).Where(m => m.Price is > 0).ToList();
+        var expenses = await _expenses.GetMonthAsync(_category.Id, month.Year, month.Month);
         if (month != Calendar.Month) return; // user paged away while loading
 
-        // One (amount, count) entry per day, from both sources.
-        var perDay = expenses.Select(e => (e.Date, Amount: e.Amount))
-            .Concat(meals.Select(m => (m.Date, Amount: m.Price!.Value)))
-            .GroupBy(x => int.Parse(x.Date[8..]))
-            .ToDictionary(g => g.Key, g => new DayBadge(Money.Compact(g.Sum(x => x.Amount)), $"{g.Count()}×"));
+        var perDay = expenses.GroupBy(e => int.Parse(e.Date[8..]))
+            .ToDictionary(g => g.Key, g => new DayBadge(g.Sum(e => e.Amount) > 0 ? Money.Compact(g.Sum(e => e.Amount)) : "·", $"{g.Count()}×"));
         Calendar.SetBadges(perDay);
 
-        var spentExpenses = expenses.Sum(e => e.Amount);
-        var spentMeals = meals.Sum(m => m.Price!.Value);
-        TotalLabel.Text = Money.Format(spentExpenses + spentMeals);
-        SplitLabel.Text = $"expenses {Money.Format(spentExpenses)} · meals {Money.Format(spentMeals)}";
+        TotalLabel.Text = Money.Format(expenses.Sum(e => e.Amount));
+        SplitLabel.Text = $"{expenses.Count} entr{(expenses.Count == 1 ? "y" : "ies")}";
     }
 
-
     async void OnDaySelected(object? sender, DateOnly day) =>
-        await Shell.Current.GoToAsync($"expenseday?date={MealRepository.Key(day)}");
+        await Shell.Current.GoToAsync($"expenseday?cat={_categoryId}&date={DateKey.Of(day)}");
 
     async void OnMonthChanged(object? sender, DateTime month) => await LoadMonthAsync();
 }
