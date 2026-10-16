@@ -7,8 +7,8 @@ public static class Money
 {
     static string Symbol => CultureInfo.CurrentCulture.NumberFormat.CurrencySymbol;
 
-    public static string Format(double v) => $"{Symbol}{v:0.##}";
+    public static string Format(double v) => v < 0 ? $"\u2212{Symbol}{-v:0.##}" : $"{Symbol}{v:0.##}";
 
     /// <summary>Short form for tight spaces, e.g. ₹1.5k.</summary>
-    public static string Compact(double v) => v >= 1000 ? $"{Symbol}{v / 1000:0.#}k" : Format(v);
+    public static string Compact(double v) => v < 0 ? "\u2212" + Compact(-v) : v >= 1000 ? $"{Symbol}{v / 1000:0.#}k" : Format(v);
 }

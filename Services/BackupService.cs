@@ -47,6 +47,14 @@ public class BackupService
         public List<string> Subcategories { get; set; } = new();
     }
 
+    class PersonRow
+    {
+        public string Name { get; set; } = "";
+        public string? Phone { get; set; }
+        public string? Note { get; set; }
+        public long CreatedTicks { get; set; }
+    }
+
     class ExpenseRow
     {
         public string Date { get; set; } = "";
@@ -57,6 +65,11 @@ public class BackupService
         public long CreatedTicks { get; set; }
         public long CategoryCreatedTicks { get; set; }
         public string? Subcategory { get; set; }
+        public long? PersonCreatedTicks { get; set; }
+        public bool IsPayback { get; set; }
+        public long? SettlesTicks { get; set; }
+        public bool ExpectBack { get; set; }
+        public bool WrittenOff { get; set; }
         public List<string> Tags { get; set; } = new();
     }
 
@@ -67,6 +80,7 @@ public class BackupService
         public int Version { get; set; } = BackupService.Version;
         public string ExportedUtc { get; set; } = "";
         public List<CategoryRow> Categories { get; set; } = new();
+        public List<PersonRow> People { get; set; } = new();
         public List<ExpenseRow> Expenses { get; set; } = new();
         public List<StreakRow> Streaks { get; set; } = new();
         public List<TickRow> Ticks { get; set; } = new();
@@ -78,6 +92,7 @@ public class BackupService
         await db.CreateTableAsync<ExpenseCategory>();
         await db.CreateTableAsync<ExpenseSubcategory>();
         await db.CreateTableAsync<ExpenseTag>();
+        await db.CreateTableAsync<Person>();
         await db.CreateTableAsync<Expense>();
         await db.CreateTableAsync<Streak>();
         await db.CreateTableAsync<StreakLog>();
@@ -94,6 +109,8 @@ public class BackupService
             var subs = await db.Table<ExpenseSubcategory>().ToListAsync();
             var tags = await db.Table<ExpenseTag>().ToListAsync();
             var expenses = await db.Table<Expense>().ToListAsync();
+            var people = await db.Table<Person>().ToListAsync();
+            var personTicks = people.ToDictionary(p => p.Id, p => p.CreatedTicks);
             var streaks = await db.Table<Streak>().ToListAsync();
             var logs = await db.Table<StreakLog>().ToListAsync();
             var ticksById = streaks.ToDictionary(s => s.Id, s => s.CreatedTicks);
@@ -109,11 +126,14 @@ public class BackupService
                     ReminderOn = c.ReminderOn, ReminderMinutes = c.ReminderMinutes, CreatedTicks = c.CreatedTicks,
                     Subcategories = subs.Where(x => x.CategoryId == c.Id).OrderBy(x => x.SortOrder).Select(x => x.Name).ToList(),
                 }).ToList(),
+                People = people.Select(p => new PersonRow { Name = p.Name, Phone = p.Phone, Note = p.Note, CreatedTicks = p.CreatedTicks }).ToList(),
                 Expenses = expenses.Select(e => new ExpenseRow
                 {
+                    PersonCreatedTicks = e.PersonId is { } pid && personTicks.TryGetValue(pid, out var pt) ? pt : null,
                     Date = e.Date, Title = e.Title, Amount = e.Amount, Description = e.Description, Receipt = e.Receipt, CreatedTicks = e.CreatedTicks,
                     CategoryCreatedTicks = categoryTicks.GetValueOrDefault(e.CategoryId),
                     Subcategory = e.SubcategoryId is { } sid ? subName.GetValueOrDefault(sid) : null,
+                    IsPayback = e.IsPayback, SettlesTicks = e.SettlesTicks, ExpectBack = e.ExpectBack, WrittenOff = e.WrittenOff,
                     Tags = tags.Where(t => t.ExpenseId == e.Id).Select(t => t.Tag).ToList(),
                 }).ToList(),
                 Streaks = streaks.Select(s => new StreakRow { Name = s.Name, Frequency = s.Frequency, CreatedTicks = s.CreatedTicks, DeletedTicks = s.DeletedTicks }).ToList(),
@@ -206,6 +226,15 @@ public class BackupService
                         return fallback;
                     }
 
+                    // People are matched by creation time too, so a rename on either side doesn't duplicate them.
+                    var personByTicks = conn.Table<Person>().ToList().ToDictionary(p => p.CreatedTicks, p => p);
+                    foreach (var p in data.People.Where(p => !personByTicks.ContainsKey(p.CreatedTicks)))
+                    {
+                        var person = new Person { Name = p.Name, Phone = p.Phone, Note = p.Note, CreatedTicks = p.CreatedTicks };
+                        conn.Insert(person);
+                        personByTicks[p.CreatedTicks] = person;
+                    }
+
                     var haveExpenses = conn.Table<Expense>().ToList().Select(e => (e.Date, e.CreatedTicks)).ToHashSet();
                     foreach (var e in data.Expenses.Where(e => !haveExpenses.Contains((e.Date, e.CreatedTicks))))
                     {
@@ -214,6 +243,8 @@ public class BackupService
                         {
                             Date = e.Date, Title = e.Title, Amount = e.Amount, Description = e.Description, Receipt = e.Receipt, CreatedTicks = e.CreatedTicks,
                             CategoryId = category.Id,
+                            PersonId = e.PersonCreatedTicks is { } wt && personByTicks.TryGetValue(wt, out var who) ? who.Id : null,
+                            IsPayback = e.IsPayback, SettlesTicks = e.SettlesTicks, ExpectBack = e.ExpectBack, WrittenOff = e.WrittenOff,
                             SubcategoryId = string.IsNullOrWhiteSpace(e.Subcategory) ? null : EnsureSubcategory(conn, category.Id, e.Subcategory),
                         };
                         conn.Insert(row);

@@ -30,13 +30,21 @@
                                         <VerticalStackLayout Spacing="2">
                                             <Label Text="{Binding Title}" />
                                             <Label Text="{Binding Detail}" IsVisible="{Binding HasDetail}" Style="{StaticResource Caption}" />
+                                            <Label Text="{Binding LinkText}" IsVisible="{Binding HasLink}" Style="{StaticResource Caption}" />
                                         </VerticalStackLayout>
                                         <Label Grid.Column="1" Text="{Binding ReceiptMark}" VerticalOptions="Center" />
-                                        <Label Grid.Column="2" Text="{Binding AmountText}" VerticalOptions="Center" FontAttributes="Bold" />
+                                        <Label Grid.Column="2" Text="{Binding AmountText}" IsVisible="{Binding IsSpend}" VerticalOptions="Center" FontAttributes="Bold" />
+                                        <Label Grid.Column="2" Text="{Binding AmountText}" IsVisible="{Binding IsPayback}" VerticalOptions="Center" FontAttributes="Bold" TextColor="{DynamicResource Primary}" />
                                     </Grid>
+                                    <!-- How much of this spend has come back, as a hairline fill under the row. -->
+                                    <VerticalStackLayout Spacing="4" IsVisible="{Binding HasSettle}">
+                                        <Label Text="{Binding SettleText}" Style="{StaticResource Caption}" />
+                                        <ProgressBar Progress="{Binding BackFraction}" ProgressColor="{DynamicResource Primary}" BackgroundColor="{DynamicResource Line}" />
+                                    </VerticalStackLayout>
                                     <c:Reveal IsOpen="{Binding IsExpanded}">
                                         <VerticalStackLayout Spacing="8">
                                             <Label Text="{Binding Description}" IsVisible="{Binding HasDescription}" Style="{StaticResource Caption}" />
+                                            <Label Text="{Binding PaybackLines}" IsVisible="{Binding HasPaybackLines}" Style="{StaticResource Caption}" />
                                             <Image Source="{Binding ReceiptImage}" IsVisible="{Binding HasReceipt}" HeightRequest="180" Aspect="AspectFit" />
                                         </VerticalStackLayout>
                                     </c:Reveal>
@@ -52,17 +60,43 @@
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
                     <Label x:Name="FormTitle" Text="NEW ENTRY" Style="{StaticResource Caption}" />
+                    <!-- Pivot-style switch: the active word is large, the other muted. -->
+                    <HorizontalStackLayout Spacing="18">
+                        <Label x:Name="SpentTab" Text="spent" FontSize="24">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnSpentTabTapped" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label x:Name="BackTab" Text="got back" FontSize="24">
+                            <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnBackTabTapped" /></Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+                    <VerticalStackLayout x:Name="LinkBox" IsVisible="False" Spacing="6">
+                        <Label Text="SETTLES (OPTIONAL)" Style="{StaticResource Caption}" />
+                        <c:ChipGroup x:Name="LinkChips" AllowDeselect="True" SelectionChanged="OnLinkChanged" />
+                    </VerticalStackLayout>
                     <c:ChipGroup x:Name="SubChips" AllowDeselect="True" IsVisible="False" />
                     <Grid ColumnDefinitions="2*,*" ColumnSpacing="8">
                         <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="TitleEntry" Placeholder="title" ReturnType="Next" /></Border>
                         <Border Grid.Column="1" Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="AmountEntry" Placeholder="amount" Keyboard="Numeric" /></Border>
                     </Grid>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PersonEntry" Placeholder="with (optional): shop, vendor, person" TextChanged="OnPersonChanged" /></Border>
+                        <Button Grid.Column="1" Text="CONTACTS" Clicked="OnPickContactClicked" />
+                    </Grid>
+                    <FlexLayout x:Name="PersonSuggestions" Wrap="Wrap" />
                     <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="DescriptionEntry" Placeholder="description (optional)" /></Border>
 
                     <Border Padding="12,6" Style="{StaticResource ControlBox}">
                         <Entry x:Name="TagsEntry" Placeholder="tags (optional): home, quick" TextChanged="OnTagsChanged" />
                     </Border>
                     <FlexLayout x:Name="TagSuggestions" Wrap="Wrap" />
+
+                    <Grid x:Name="ExpectRow" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                            <Label Text="expecting some of this back" />
+                            <Label Text="a loan, a deposit, a booking that may be refunded" Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <Switch x:Name="ExpectSwitch" Grid.Column="1" />
+                    </Grid>
 
                     <Label Text="RECEIPT (OPTIONAL)" Style="{StaticResource Caption}" />
                     <Border x:Name="ReceiptBox" IsVisible="False" Padding="4" Style="{StaticResource ControlBox}">

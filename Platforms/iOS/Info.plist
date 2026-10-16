@@ -30,6 +30,8 @@
 	<string>Capture photos of receipts to attach to expenses.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Pick receipt photos to attach to expenses.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Pick a contact to link to an expense (a shop, a vendor, someone you lent to).</string>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
 </dict>

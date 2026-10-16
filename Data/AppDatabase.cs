@@ -32,8 +32,13 @@ public static class AppDatabase
             var db = new SQLiteAsyncConnection(Path.Combine(FileSystem.AppDataDirectory, "daylogger.db3"));
             await db.CreateTableAsync<ExpenseCategory>();
             await db.CreateTableAsync<ExpenseSubcategory>();
+            await db.CreateTableAsync<Person>();
             await db.CreateTableAsync<Expense>();
             await db.CreateTableAsync<ExpenseTag>();
+
+            // Columns added after rows existed read back as NULL, which `= 0` queries would skip.
+            foreach (var column in new[] { "IsPayback", "ExpectBack", "WrittenOff" })
+                await db.ExecuteAsync($"UPDATE Expense SET {column} = 0 WHERE {column} IS NULL");
 
             // Meal Tracker is gone: meals are now an ordinary category the user creates.
             await db.ExecuteAsync("DROP TABLE IF EXISTS Meal");

@@ -23,6 +23,10 @@ Other details:
 - Backups are `.dlbackup` files (version 2: categories, subcategories, tags). Version 1 files still restore, and restore merges rows rather than replacing them.
 - The theme picks up the platform accent (Material You on Android, the Windows accent) with light and dark palettes.
 
+Money that comes back (refunds, cashback, repayments) is logged on the same day pages with the **spent | got back** switch. A payback can be linked to the spend it settles, and spending totals are net of paybacks.
+
+Entries can be linked to a **person** (a shop, a vendor, a friend you lent to), typed or picked from the phone's contacts. The `people` row on the expenses list shows what you spent with each and what is still to come back.
+
 ## Build and run
 
 ```

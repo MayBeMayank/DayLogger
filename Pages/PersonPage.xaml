@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             SafeAreaEdges="SoftInput"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:DayLogger.Controls"
+             x:Class="DayLogger.Pages.PersonPage"
+             Title="PERSON">
+
+    <c:OneUiScaffold x:Name="Scaffold" Title="person" Subtitle="">
+        <VerticalStackLayout Padding="16" Spacing="14">
+            <Border Padding="12" Style="{StaticResource Section}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="NAME" Style="{StaticResource Caption}" />
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="name" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PhoneEntry" Placeholder="phone (optional)" Keyboard="Telephone" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NoteEntry" Placeholder="note (optional)" /></Border>
+                    <Button Style="{StaticResource PrimaryButton}" Text="SAVE" Clicked="OnSaveClicked" />
+                </VerticalStackLayout>
+            </Border>
+
+            <VerticalStackLayout x:Name="ExistingOnly" Spacing="14">
+                <Grid x:Name="ContactButtons" ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Text="CALL" Clicked="OnCallClicked" />
+                    <Button Grid.Column="1" Text="MESSAGE" Clicked="OnMessageClicked" />
+                </Grid>
+                <Label x:Name="SummaryLabel" Style="{StaticResource Caption}" />
+                <VerticalStackLayout x:Name="Entries" Margin="-16,0" />
+                <Button Text="DELETE PERSON…" Clicked="OnDeleteClicked" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </c:OneUiScaffold>
+</ContentPage>

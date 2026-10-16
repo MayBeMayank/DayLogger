@@ -17,6 +17,7 @@ namespace DayLogger
         readonly StreakRepository _streaks;
         readonly CategoryRepository _categories;
         readonly ExpenseRepository _expenses;
+        readonly PersonRepository _people;
         readonly ReminderService _reminders;
 
         const double TopButtonAfter = 300; // dp scrolled before the back-to-top button shows
@@ -32,6 +33,7 @@ namespace DayLogger
             _streaks = services.GetRequiredService<StreakRepository>();
             _categories = services.GetRequiredService<CategoryRepository>();
             _expenses = services.GetRequiredService<ExpenseRepository>();
+            _people = services.GetRequiredService<PersonRepository>();
             _reminders = services.GetRequiredService<ReminderService>();
             SizeChanged += (_, _) => AppTitle.Margin = new Thickness(20, Math.Clamp(Height * 0.03, 16, 32), 20, 0);
         }
@@ -146,7 +148,7 @@ namespace DayLogger
             foreach (var c in all) rows.Add((c, await _expenses.GetMonthAsync(c.Id, today.Year, today.Month)));
 
             var active = rows.Where(r => !r.Category.Archived).ToList();
-            var total = active.Sum(r => r.Month.Sum(e => e.Amount));
+            var total = active.Sum(r => r.Month.Sum(e => e.Net));
             var entries = active.Sum(r => r.Month.Count);
 
             body.Clear();
@@ -155,13 +157,22 @@ namespace DayLogger
                 ? "tap + to create a category (Meals, Travel, Bills…)"
                 : $"{today.ToString("MMMM", CultureInfo.CurrentCulture).ToLowerInvariant()} · {entries} entr{(entries == 1 ? "y" : "ies")}"));
 
+            var summaries = await _people.GetSummariesAsync();
+            var owed = summaries.Sum(s => s.Open);
+            body.Add(Metro.ListItem("people", summaries.Count == 0
+                    ? "shops, vendors and friends you deal with"
+                    : $"{summaries.Count} · {(owed > 0 ? Money.Format(owed) + " yet to come back" : "nothing waiting to come back")}",
+                () => Shell.Current.GoToAsync("people")));
+
             foreach (var (c, month) in rows)
             {
                 var id = c.Id;
-                var sum = month.Sum(e => e.Amount);
+                var sum = month.Sum(e => e.Net);
+                var pending = c.Archived ? 0 : await _expenses.GetOpenAsync(id);
                 var detail = c.Archived
                     ? "archived · tap to restore or delete"
-                    : $"{(sum > 0 ? Money.Format(sum) + " · " : "")}{month.Count} entr{(month.Count == 1 ? "y" : "ies")} this month";
+                    : $"{(sum != 0 ? Money.Format(sum) + " · " : "")}{month.Count} entr{(month.Count == 1 ? "y" : "ies")} this month"
+                      + (pending > 0 ? $" · {Money.Format(pending)} yet to come back" : "");
 
                 var category = c;
                 body.Add(Metro.ListItem(c.Name.ToLowerInvariant(), detail,

@@ -18,6 +18,7 @@ namespace DayLogger
             builder.Services.AddSingleton<CategoryRepository>();
             builder.Services.AddSingleton<StreakRepository>();
             builder.Services.AddSingleton<ExpenseRepository>();
+            builder.Services.AddSingleton<PersonRepository>();
             builder.Services.AddSingleton<BackupService>();
 #if ANDROID
             builder.Services.AddSingleton<IReminderPlatform, AndroidReminderPlatform>();
@@ -32,6 +33,8 @@ namespace DayLogger
             builder.Services.AddTransient<ExpensesCalendarPage>();
             builder.Services.AddTransient<ExpenseDayPage>();
             builder.Services.AddTransient<CategoryPage>();
+            builder.Services.AddTransient<PeoplePage>();
+            builder.Services.AddTransient<PersonPage>();
             builder.Services.AddTransient<StreaksPage>();
             builder.Services.AddTransient<StreakDetailPage>();
             builder.Services.AddTransient<StreakBinPage>();

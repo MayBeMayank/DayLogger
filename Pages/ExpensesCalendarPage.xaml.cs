@@ -40,11 +40,14 @@ public partial class ExpensesCalendarPage : ContentPage
         if (month != Calendar.Month) return; // user paged away while loading
 
         var perDay = expenses.GroupBy(e => int.Parse(e.Date[8..]))
-            .ToDictionary(g => g.Key, g => new DayBadge(g.Sum(e => e.Amount) > 0 ? Money.Compact(g.Sum(e => e.Amount)) : "·", $"{g.Count()}×"));
+            .ToDictionary(g => g.Key, g => new DayBadge(g.Sum(e => e.Net) != 0 ? Money.Compact(g.Sum(e => e.Net)) : "·", $"{g.Count()}×"));
         Calendar.SetBadges(perDay);
 
-        TotalLabel.Text = Money.Format(expenses.Sum(e => e.Amount));
-        SplitLabel.Text = $"{expenses.Count} entr{(expenses.Count == 1 ? "y" : "ies")}";
+        // Headline is what was really spent; the split shows how much of the month's spending came back.
+        var back = expenses.Where(e => e.IsPayback).Sum(e => e.Amount);
+        TotalLabel.Text = Money.Format(expenses.Sum(e => e.Net));
+        var count = $"{expenses.Count} entr{(expenses.Count == 1 ? "y" : "ies")}";
+        SplitLabel.Text = back > 0 ? $"spent {Money.Format(expenses.Where(e => !e.IsPayback).Sum(e => e.Amount))} · back {Money.Format(back)} · {count}" : count;
     }
 
     async void OnDaySelected(object? sender, DateOnly day) =>
