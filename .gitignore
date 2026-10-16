@@ -361,3 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# DayLogger
+# Claude Code local settings and per-session state
+.claude/settings.local.json
+
+# Exported app backups
+*.dlbackup
+
+# Other IDEs
+.idea/
+*.iml
