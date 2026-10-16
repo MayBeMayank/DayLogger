@@ -52,6 +52,7 @@ public class BackupService
         public string Name { get; set; } = "";
         public string? Phone { get; set; }
         public string? Note { get; set; }
+        public string? Photo { get; set; }
         public long CreatedTicks { get; set; }
     }
 
@@ -126,7 +127,7 @@ public class BackupService
                     ReminderOn = c.ReminderOn, ReminderMinutes = c.ReminderMinutes, CreatedTicks = c.CreatedTicks,
                     Subcategories = subs.Where(x => x.CategoryId == c.Id).OrderBy(x => x.SortOrder).Select(x => x.Name).ToList(),
                 }).ToList(),
-                People = people.Select(p => new PersonRow { Name = p.Name, Phone = p.Phone, Note = p.Note, CreatedTicks = p.CreatedTicks }).ToList(),
+                People = people.Select(p => new PersonRow { Name = p.Name, Phone = p.Phone, Note = p.Note, Photo = p.Photo, CreatedTicks = p.CreatedTicks }).ToList(),
                 Expenses = expenses.Select(e => new ExpenseRow
                 {
                     PersonCreatedTicks = e.PersonId is { } pid && personTicks.TryGetValue(pid, out var pt) ? pt : null,
@@ -153,6 +154,15 @@ public class BackupService
                     if (!File.Exists(file)) continue;
                     // Photos are already compressed.
                     await using var entry = zip.CreateEntry("receipts/" + name, CompressionLevel.NoCompression).Open();
+                    await using var src = File.OpenRead(file);
+                    await src.CopyToAsync(entry);
+                }
+
+                foreach (var name in people.Select(p => p.Photo).Where(r => !string.IsNullOrEmpty(r)).Distinct())
+                {
+                    var file = PersonRepository.PhotoPath(name!);
+                    if (!File.Exists(file)) continue;
+                    await using var entry = zip.CreateEntry("people/" + name, CompressionLevel.NoCompression).Open();
                     await using var src = File.OpenRead(file);
                     await src.CopyToAsync(entry);
                 }
@@ -230,7 +240,7 @@ public class BackupService
                     var personByTicks = conn.Table<Person>().ToList().ToDictionary(p => p.CreatedTicks, p => p);
                     foreach (var p in data.People.Where(p => !personByTicks.ContainsKey(p.CreatedTicks)))
                     {
-                        var person = new Person { Name = p.Name, Phone = p.Phone, Note = p.Note, CreatedTicks = p.CreatedTicks };
+                        var person = new Person { Name = p.Name, Phone = p.Phone, Note = p.Note, Photo = RestoreFile(zip, "people", p.Photo, PersonRepository.PhotosDir) ? Path.GetFileName(p.Photo) : null, CreatedTicks = p.CreatedTicks };
                         conn.Insert(person);
                         personByTicks[p.CreatedTicks] = person;
                     }
@@ -301,15 +311,19 @@ public class BackupService
         return sub.Id;
     }
 
-    static bool RestoreReceipt(ZipArchive zip, string? name)
+    static bool RestoreReceipt(ZipArchive zip, string? name) => RestoreFile(zip, "receipts", name, ExpenseRepository.ReceiptsDir);
+
+    /// <summary>Copies a picture out of the zip into its app folder; true when the file is there afterwards.</summary>
+    static bool RestoreFile(ZipArchive zip, string folder, string? name, string targetDir)
     {
         if (string.IsNullOrEmpty(name)) return false;
         // Names are generated GUIDs; never trust a path from a file.
         name = Path.GetFileName(name);
-        var entry = zip.GetEntry("receipts/" + name);
-        var target = ExpenseRepository.ReceiptPath(name);
-        if (entry == null || File.Exists(target)) return false;
-        Directory.CreateDirectory(ExpenseRepository.ReceiptsDir);
+        var target = Path.Combine(targetDir, name);
+        if (File.Exists(target)) return true;
+        var entry = zip.GetEntry(folder + "/" + name);
+        if (entry == null) return false;
+        Directory.CreateDirectory(targetDir);
         entry.ExtractToFile(target);
         return true;
     }

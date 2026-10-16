@@ -34,6 +34,7 @@ public partial class StreakDetailPage : ContentPage
         Calendar.SelectedDate = _day;
         ShowDay();
         ShowMonth();
+        await Scaffold.EnterAsync();
     }
 
     HashSet<int> TicksOn(DateOnly d) =>

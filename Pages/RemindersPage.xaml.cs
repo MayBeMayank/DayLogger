@@ -26,6 +26,7 @@ public partial class RemindersPage : ContentPage
         if (all.Count == 0)
             List.Children.Add(new Label { Text = "no categories yet: create one from the home pivot (+ new)", Style = (Style)Application.Current!.Resources["Caption"] });
         foreach (var c in all) List.Children.Add(Row(c));
+        await Scaffold.EnterAsync();
     }
 
     View Row(ExpenseCategory category)

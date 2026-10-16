@@ -4,7 +4,7 @@
              xmlns:c="clr-namespace:DayLogger.Controls"
              x:Class="DayLogger.Pages.ExpensesCalendarPage">
 
-    <c:OneUiScaffold x:Name="Scaffold" AsideBelow="True" Title="EXPENSES">
+    <c:OneUiScaffold x:Name="Scaffold" ManualEntrance="True" AsideBelow="True" Title="EXPENSES">
         <c:OneUiScaffold.Aside>
             <VerticalStackLayout Padding="16,0,16,16">
                 <Border Padding="12">

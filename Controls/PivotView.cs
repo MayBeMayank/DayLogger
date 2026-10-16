@@ -39,9 +39,19 @@ public class PivotView : ContentView
     List<PivotSection> _sections = new();
     double _pos;      // 0 = first section exactly in place, 1 = second, ... may run past either end while looping
     double _dragFrom;
+    int _hinted;
     bool _retrying;
 
     public event EventHandler? SelectedChanged;
+
+    /// <summary>
+    /// A section is about to slide into view, from the right (+1) or the left (-1): the user's drag has picked a side, or a
+    /// tap or release has started the settle. Lets the host hide that section's items before they show.
+    /// </summary>
+    public event Action<PivotSection, int>? Approaching;
+
+    /// <summary>Which way the last selection moved: +1 to a later section (content arrived from the right), -1 to an earlier one.</summary>
+    public int Direction { get; private set; } = 1;
 
     public PivotView()
     {
@@ -56,11 +66,18 @@ public class PivotView : ContentView
             if (_sections.Count < 2) return;
             this.AbortAnimation("pivot");
             _dragFrom = _pos;
+            _hinted = 0;
         };
         _content.SwipeDelta += dx =>
         {
             if (_sections.Count < 2 || Width <= 0) return;
             _pos -= dx / Width;
+            int side = Math.Sign(-dx);
+            if (side != 0 && side != _hinted)
+            {
+                _hinted = side;
+                Approaching?.Invoke(_sections[Mod((int)Math.Round(_dragFrom) + side, _sections.Count)], side);
+            }
             Render();
         };
         _content.SwipeEnded += velocity =>
@@ -68,7 +85,7 @@ public class PivotView : ContentView
             if (_sections.Count < 2 || Width <= 0) return;
             var start = Math.Round(_dragFrom);
             var projected = _pos - velocity / Width * Fling;
-            AnimateTo(Math.Clamp(Math.Round(projected), start - 1, start + 1));
+            AnimateTo(Math.Clamp(Math.Round(projected), start - 1, start + 1), start);
         };
 
         SizeChanged += (_, _) => Render();
@@ -102,7 +119,7 @@ public class PivotView : ContentView
         // Shortest way round the loop.
         int steps = Mod(at - Mod((int)from, n), n);
         if (steps > n / 2) steps -= n;
-        AnimateTo(from + steps);
+        AnimateTo(from + steps, from);
     }
 
     /// <summary>1 for the active header (rank 0), easing down to <see cref="InactiveScale"/> a full step away.</summary>
@@ -140,12 +157,15 @@ public class PivotView : ContentView
     void OnHeaderTapped(Label label)
     {
         if (!_slots.TryGetValue(label, out var slot) || slot.Steps == 0) return;
-        AnimateTo(Math.Round(_pos) + slot.Steps);
+        AnimateTo(Math.Round(_pos) + slot.Steps, Math.Round(_pos));
     }
 
-    void AnimateTo(double target)
+    void AnimateTo(double target, double from)
     {
         this.AbortAnimation("pivot");
+        Direction = target > from ? 1 : target < from ? -1 : Direction;
+        if (target != from && _sections.Count > 1)
+            Approaching?.Invoke(_sections[Mod((int)target, _sections.Count)], Direction);
         new Animation(v => { _pos = v; Render(); }, _pos, target, Easing.CubicOut)
             .Commit(this, "pivot", 16, 260, null, (_, canceled) =>
             {

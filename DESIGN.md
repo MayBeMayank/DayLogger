@@ -91,6 +91,7 @@ Colours come from `ThemeService` keys and are always bound with `DynamicResource
 - Pivot swipe: content follows the finger 1:1, headers at about 0.5x. Settle with a standard ease-out, about 250ms.
 - Page navigation: turnstile-style (the outgoing page tilts away, the incoming page tilts in), about 250ms. Fall back to a slide where Shell does not allow it.
 - List items stagger in about 30ms apart on first load of a section. Not on every return.
+- Implemented in `Controls/Motion.cs`: `FlyInAsync` (list items, pivot sections once on first view) and `TurnstileInAsync` (page elements flip in around their left edge, 40ms apart, run by `OneUiScaffold.EnterAsync`; pages that fill lists after loading set `ManualEntrance` and call it when done). Home items fly in every time a section arrives, from the side it came from (right when moving to a later section, left for an earlier one or when returning to the page); returning to a pushed page replays the turnstile mirrored. Each run claims its views, so an interrupted run can never leave an item offset. Only the first 14 items animate. Incoming pages only: Shell owns the outgoing animation.
 - Respect the system "reduce motion" setting by disabling parallax and staggering.
 
 ## Expense category pages

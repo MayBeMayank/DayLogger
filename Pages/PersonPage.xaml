@@ -10,18 +10,25 @@
         <VerticalStackLayout Padding="16" Spacing="14">
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="NAME" Style="{StaticResource Caption}" />
-                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="name" /></Border>
-                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PhoneEntry" Placeholder="phone (optional)" Keyboard="Telephone" /></Border>
-                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NoteEntry" Placeholder="note (optional)" /></Border>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                        <c:Avatar x:Name="Picture" Size="72" VerticalOptions="Start" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                            <Button Text="CHOOSE PHOTO" Clicked="OnPhotoClicked" />
+                            <Button x:Name="RemovePhotoButton" Text="REMOVE PHOTO" Clicked="OnRemovePhotoClicked" IsVisible="False" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="name, e.g. Ravi Stores" TextChanged="OnNameChanged" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PhoneEntry" Placeholder="phone number" Keyboard="Telephone" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NoteEntry" Placeholder="note, e.g. milk vendor, flatmate" /></Border>
                     <Button Style="{StaticResource PrimaryButton}" Text="SAVE" Clicked="OnSaveClicked" />
                 </VerticalStackLayout>
             </Border>
 
             <VerticalStackLayout x:Name="ExistingOnly" Spacing="14">
-                <Grid x:Name="ContactButtons" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Grid x:Name="ContactButtons" ColumnDefinitions="*,*,*" ColumnSpacing="8">
                     <Button Text="CALL" Clicked="OnCallClicked" />
                     <Button Grid.Column="1" Text="MESSAGE" Clicked="OnMessageClicked" />
+                    <Button Grid.Column="2" Text="WHATSAPP" Clicked="OnWhatsAppClicked" />
                 </Grid>
                 <Label x:Name="SummaryLabel" Style="{StaticResource Caption}" />
                 <VerticalStackLayout x:Name="Entries" Margin="-16,0" />

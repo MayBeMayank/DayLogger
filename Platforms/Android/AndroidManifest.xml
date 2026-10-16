@@ -12,5 +12,14 @@
 		<intent>
 			<action android:name="android.media.action.IMAGE_CAPTURE" />
 		</intent>
+		<!-- Android 11+ hides other apps unless declared, which made calling and messaging look unsupported. -->
+		<intent>
+			<action android:name="android.intent.action.DIAL" />
+			<data android:scheme="tel" />
+		</intent>
+		<intent>
+			<action android:name="android.intent.action.VIEW" />
+			<data android:scheme="sms" />
+		</intent>
 	</queries>
 </manifest>

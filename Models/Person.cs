@@ -17,6 +17,9 @@ public class Person
     public string? Phone { get; set; }
     public string? Note { get; set; }
 
+    /// <summary>File name inside the people photo folder (not a path, which changes between installs).</summary>
+    public string? Photo { get; set; }
+
     /// <summary>Identifies the person across devices (backup restore matches on it).</summary>
     public long CreatedTicks { get; set; }
 }

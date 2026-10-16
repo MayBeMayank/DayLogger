@@ -43,7 +43,7 @@ static class FluidMotion
         catch { /* no sensor or permission: the liquid just sits level */ }
 
         _timer ??= fill.Dispatcher.CreateTimer();
-        _timer.Interval = TimeSpan.FromMilliseconds(16);
+        _timer.Interval = TimeSpan.FromMilliseconds(33); // ~30 fps is plenty for a small wave and halves the redraw cost
         _timer.Tick -= OnTick;
         _timer.Tick += OnTick;
         Clock.Restart();
@@ -115,6 +115,8 @@ static class FluidMotion
         Slosh = Math.Sqrt(_vx * _vx + _vy * _vy);
         Phase += dt * 3;
 
+        // Redrawing dozens of fills (a calendar) competes with a page entrance for frames; they pick up again right after.
+        if (Motion.Busy) return;
         foreach (var f in Fills) f.Invalidate();
     }
 }

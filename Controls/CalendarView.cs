@@ -27,7 +27,7 @@ public class CalendarView : ContentView
     public DateOnly? SelectedDate
     {
         get => _selected;
-        set { _selected = value; Render(); }
+        set { if (_selected == value) return; _selected = value; Render(); }
     }
 
     public DayOfWeek FirstDayOfWeek { get; set; } = DayOfWeek.Monday;
@@ -55,6 +55,8 @@ public class CalendarView : ContentView
 
     public void SetBadges(IReadOnlyDictionary<int, DayBadge> byDayOfMonth)
     {
+        // Rebuilding ~35 cells is the expensive part of the page; skip it when a reload brought nothing new.
+        if (_badges.Count == byDayOfMonth.Count && byDayOfMonth.All(kv => _badges.TryGetValue(kv.Key, out var b) && b == kv.Value)) return;
         _badges = byDayOfMonth;
         Render();
     }

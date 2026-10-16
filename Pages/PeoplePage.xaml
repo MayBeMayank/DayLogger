@@ -5,7 +5,7 @@
              x:Class="DayLogger.Pages.PeoplePage"
              Title="PEOPLE">
 
-    <c:OneUiScaffold x:Name="Scaffold" Title="people" Subtitle="shops, vendors and friends you deal with">
+    <c:OneUiScaffold x:Name="Scaffold" ManualEntrance="True" Title="people" Subtitle="shops, vendors and friends you deal with">
         <VerticalStackLayout x:Name="List" Padding="0,8" />
     </c:OneUiScaffold>
 </ContentPage>

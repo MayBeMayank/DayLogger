@@ -18,6 +18,7 @@ public partial class StreakBinPage : ContentPage
     {
         base.OnAppearing();
         await RefreshAsync();
+        await Scaffold.EnterAsync();
     }
 
     async Task RefreshAsync()

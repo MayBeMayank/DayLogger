@@ -95,6 +95,85 @@ public class OneUiScaffold : ContentView
         Content = _root;
 
         SizeChanged += (_, _) => ApplyLayout();
+        Unloaded += (_, _) => UnhookPage();
+
+        // Hidden until the turnstile runs so the finished layout never flashes first.
+        if (!Motion.Reduced) _bodyHost.Opacity = _asideHost.Opacity = _bigTitle.Opacity = 0;
+        Loaded += async (_, _) =>
+        {
+            HookPage();
+            // Pages that fill their list asynchronously call EnterAsync themselves; this is only the safety net.
+            if (!ManualEntrance) await EnterAsync();
+            else { await Task.Delay(1500); await EnterAsync(); }
+        };
+    }
+
+    /// <summary>Set when the page fills its body after loading and calls <see cref="EnterAsync"/> once that is done.</summary>
+    public bool ManualEntrance { get; set; }
+
+    bool _entered, _entering, _left;
+    Page? _page;
+
+    // Coming back to the page (the one pushed on top was popped) replays the turnstile the other way round.
+    void HookPage()
+    {
+        UnhookPage();
+        for (Element? e = Parent; e != null; e = e.Parent)
+        {
+            if (e is not Page page) continue;
+            _page = page;
+            page.Disappearing += OnPageDisappearing;
+            page.Appearing += OnPageAppearing;
+            break;
+        }
+    }
+
+    void UnhookPage()
+    {
+        if (_page == null) return;
+        _page.Disappearing -= OnPageDisappearing;
+        _page.Appearing -= OnPageAppearing;
+        _page = null;
+    }
+
+    void OnPageDisappearing(object? sender, EventArgs e) => _left = true;
+
+    void OnPageAppearing(object? sender, EventArgs e)
+    {
+        if (!_left || !_entered || _entering) return;
+        _left = false;
+        // The elements hide synchronously inside TurnstileInAsync, before the page has finished sliding back.
+        _ = Motion.TurnstileInAsync(Elements(), forward: false);
+    }
+
+    List<View> Elements()
+    {
+        var items = new List<View> { _bigTitle };
+        if (Aside != null) items.Add(Aside);
+        if (Body is Layout layout) AddElements(items, layout, 0);
+        else if (Body != null) items.Add(Body);
+        return items;
+    }
+
+    /// <summary>Turnstile: the title, then the aside and each top-level body element, flip in one after another. Runs once per page.</summary>
+    public async Task EnterAsync()
+    {
+        if (_entered) return;
+        _entered = true;
+
+        var items = Elements();
+
+        if (Motion.Reduced) { _bodyHost.Opacity = _asideHost.Opacity = 1; return; }
+
+        // Hide the elements first, then reveal their hosts, so nothing shows between the two steps.
+        _entering = true;
+        try
+        {
+            foreach (var v in items) v.Opacity = 0;
+            _bodyHost.Opacity = _asideHost.Opacity = 1;
+            await Motion.TurnstileInAsync(items);
+        }
+        finally { _entering = false; }
     }
 
     void SyncText()
@@ -191,6 +270,16 @@ public class OneUiScaffold : ContentView
         {
             _leftStack.Add(_leftSpacer);
             _leftStack.Add(_asideHost);
+        }
+    }
+
+    // A plain vertical stack inside the body is a list wrapper, so its rows flip individually rather than as one block.
+    static void AddElements(List<View> items, Layout layout, int depth)
+    {
+        foreach (var v in layout.Children.OfType<View>().Where(v => v.IsVisible))
+        {
+            if (depth == 0 && v is VerticalStackLayout { Children.Count: > 0 } stack) AddElements(items, stack, depth + 1);
+            else items.Add(v);
         }
     }
 

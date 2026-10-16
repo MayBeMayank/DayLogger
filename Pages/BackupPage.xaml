@@ -13,7 +13,7 @@
                     <Label Text="PASSWORD (OPTIONAL)" Style="{StaticResource Caption}" />
                     <Label Text="Leave empty for a plain backup. Fill it in to encrypt a new backup, or to open an encrypted one. There is no way to recover a forgotten password." Style="{StaticResource Caption}" />
                     <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PasswordEntry" Placeholder="password" IsPassword="True" TextChanged="OnPasswordChanged" /></Border>
-                    <Border x:Name="RepeatBox" Padding="12,6" Style="{StaticResource ControlBox}" IsVisible="False"><Entry x:Name="RepeatEntry" Placeholder="repeat password (for a new backup)" IsPassword="True" /></Border>
+                    <Border x:Name="RepeatBox" Padding="12,6" Style="{StaticResource ControlBox}" IsVisible="False"><Entry x:Name="RepeatEntry" Placeholder="repeat password" IsPassword="True" /></Border>
                 </VerticalStackLayout>
             </Border>
 

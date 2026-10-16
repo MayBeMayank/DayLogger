@@ -2,6 +2,7 @@ using DayLogger.Controls;
 using System.Globalization;
 using DayLogger.Data;
 using DayLogger.Models;
+using DayLogger.Services;
 
 namespace DayLogger.Pages;
 
@@ -23,7 +24,8 @@ public partial class ExpenseDayPage : ContentPage
     List<ExpenseSubcategory> _subs = new();
     List<string> _knownTags = new();
     List<Person> _people = new();
-    string? _pickedName, _pickedPhone;   // a contact chosen from the phone, saved with the person if the name is still it
+    string? _pickedName, _pickedPhone;
+    byte[]? _pickedPhoto;   // a contact chosen from the phone, saved with the person if the name is still it
     Expense? _editing;
     bool _isPayback;           // the form's "got back" side is active
     List<Expense> _links = new();   // spends the chips in LinkChips stand for
@@ -79,6 +81,7 @@ public partial class ExpenseDayPage : ContentPage
         _people = await _peopleRepo.GetAllAsync();
         ShowPersonSuggestions();
         await RefreshAsync();
+        await Scaffold.EnterAsync();
 
         if (_pendingPayback is { } pending)
         {
@@ -120,6 +123,7 @@ public partial class ExpenseDayPage : ContentPage
         LinkBox.IsVisible = payback;
         ExpectRow.IsVisible = !payback;
         FormTitle.Text = (_editing == null ? "NEW " : "EDIT ") + (payback ? "PAYBACK" : "ENTRY");
+        TitleEntry.Placeholder = payback ? "what came back, e.g. refund" : "what for, e.g. groceries";
         AmountEntry.Placeholder = payback ? "amount back" : _category?.AmountRequired == false ? "amount (optional)" : "amount";
     }
 
@@ -195,6 +199,7 @@ public partial class ExpenseDayPage : ContentPage
         CancelButton.IsVisible = false;
         TitleEntry.Text = AmountEntry.Text = DescriptionEntry.Text = TagsEntry.Text = PersonEntry.Text = "";
         _pickedName = _pickedPhone = null;
+        _pickedPhoto = null;
         // A new entry starts on the subcategory used last time in this category.
         var last = Preferences.Get(LastSubPref, 0);
         SubChips.SelectedIndex = _subs.FindIndex(s => s.Id == last);
@@ -258,6 +263,8 @@ public partial class ExpenseDayPage : ContentPage
     void ShowPersonSuggestions()
     {
         var token = (PersonEntry.Text ?? "").Trim();
+        PersonAvatar.Name = token;
+        PersonAvatar.Photo = _people.FirstOrDefault(p => p.Name.Equals(token, StringComparison.OrdinalIgnoreCase))?.Photo;
         var matches = _people.Where(p => !p.Name.Equals(token, StringComparison.OrdinalIgnoreCase)
                 && (token.Length == 0 || p.Name.Contains(token, StringComparison.OrdinalIgnoreCase)))
             .Take(MaxSuggestions).ToList();
@@ -289,6 +296,7 @@ public partial class ExpenseDayPage : ContentPage
             if (contact == null || string.IsNullOrWhiteSpace(contact.DisplayName)) return;
             PersonEntry.Text = _pickedName = contact.DisplayName.Trim();
             _pickedPhone = contact.Phones.FirstOrDefault()?.PhoneNumber;
+            _pickedPhoto = ContactPhoto.Read(contact.Id);
         }
         catch (Exception ex) when (ex is PermissionException or FeatureNotSupportedException)
         {
@@ -362,7 +370,7 @@ public partial class ExpenseDayPage : ContentPage
         var who = PersonEntry.Text?.Trim();
         expense.PersonId = string.IsNullOrEmpty(who)
             ? null
-            : (await _peopleRepo.FindOrCreateAsync(who, who == _pickedName ? _pickedPhone : null)).Id;
+            : (await _peopleRepo.FindOrCreateAsync(who, who == _pickedName ? _pickedPhone : null, who == _pickedName ? _pickedPhoto : null)).Id;
         expense.IsPayback = _isPayback;
         expense.SettlesTicks = _isPayback && LinkChips.SelectedIndex >= 0 && LinkChips.SelectedIndex < _links.Count ? _links[LinkChips.SelectedIndex].CreatedTicks : null;
         expense.ExpectBack = !_isPayback && ExpectSwitch.IsToggled;

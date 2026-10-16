@@ -30,6 +30,8 @@ public partial class ExpensesCalendarPage : ContentPage
         Scaffold.Title = _category.Name;
         Scaffold.Subtitle = "tap a day to log or review";
         await LoadMonthAsync();
+        // Data and text are in place before the page flips in, so nothing is rebuilt mid-animation.
+        await Scaffold.EnterAsync();
     }
 
     async Task LoadMonthAsync()

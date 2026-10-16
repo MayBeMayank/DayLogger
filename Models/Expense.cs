@@ -49,6 +49,8 @@ public class Expense : INotifyPropertyChanged
     [Ignore] public List<string> Tags { get; set; } = new();
     [Ignore] public string? SubcategoryName { get; set; }
     [Ignore] public string? PersonName { get; set; }
+    [Ignore] public string? PersonPhoto { get; set; }
+    [Ignore] public bool HasPerson => PersonName != null;
     [Ignore] public List<Expense> Paybacks { get; set; } = new();
     [Ignore] public string? LinkedTitle { get; set; }
 

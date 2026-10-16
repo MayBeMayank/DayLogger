@@ -13,6 +13,7 @@ public partial class PersonPage : ContentPage
     readonly ExpenseRepository _expenses;
     readonly CategoryRepository _categories;
     Person? _person;
+    byte[]? _newPhoto;      // chosen on a person not saved yet
     int _id;
     bool _newShown;
 
@@ -48,6 +49,8 @@ public partial class PersonPage : ContentPage
             NameEntry.Text = _person.Name;
             PhoneEntry.Text = _person.Phone;
             NoteEntry.Text = _person.Note;
+            Picture.Photo = _person.Photo;
+            RemovePhotoButton.IsVisible = _person.Photo != null;
         }
         ContactButtons.IsVisible = !string.IsNullOrWhiteSpace(_person.Phone);
         await ShowEntriesAsync();
@@ -73,6 +76,41 @@ public partial class PersonPage : ContentPage
         }
     }
 
+    void OnNameChanged(object? sender, TextChangedEventArgs e) => Picture.Name = NameEntry.Text;
+
+    async void OnPhotoClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            var photo = await MediaPicker.Default.PickPhotoAsync();
+            if (photo == null) return;
+            await using var stream = await photo.OpenReadAsync();
+            using var copy = new MemoryStream();
+            await stream.CopyToAsync(copy);
+            var bytes = copy.ToArray();
+
+            if (_person == null) { _newPhoto = bytes; Picture.Photo = null; await DisplayAlertAsync("Photo", "The photo is added when you save.", "ok"); }
+            else
+            {
+                await _people.SetPhotoAsync(_person, bytes);
+                Picture.Photo = _person.Photo;
+                RemovePhotoButton.IsVisible = true;
+            }
+        }
+        catch (Exception ex) when (ex is PermissionException or FeatureNotSupportedException)
+        {
+            await DisplayAlertAsync("Photo", "Photo access is not available.", "ok");
+        }
+    }
+
+    async void OnRemovePhotoClicked(object? sender, EventArgs e)
+    {
+        if (_person == null) return;
+        await _people.SetPhotoAsync(_person, null);
+        Picture.Photo = null;
+        RemovePhotoButton.IsVisible = false;
+    }
+
     async void OnSaveClicked(object? sender, EventArgs e)
     {
         var name = NameEntry.Text?.Trim();
@@ -83,6 +121,7 @@ public partial class PersonPage : ContentPage
         person.Phone = string.IsNullOrWhiteSpace(PhoneEntry.Text) ? null : PhoneEntry.Text.Trim();
         person.Note = string.IsNullOrWhiteSpace(NoteEntry.Text) ? null : NoteEntry.Text.Trim();
         await _people.SaveAsync(person);
+        if (_newPhoto != null) { await _people.SetPhotoAsync(person, _newPhoto); _newPhoto = null; }
 
         if (_id == 0) { await Shell.Current.GoToAsync(".."); return; }
         Scaffold.Title = person.Name;
@@ -101,6 +140,23 @@ public partial class PersonPage : ContentPage
         if (string.IsNullOrWhiteSpace(_person?.Phone)) return;
         try { await Sms.Default.ComposeAsync(new SmsMessage("", _person.Phone)); }
         catch (FeatureNotSupportedException) { await DisplayAlertAsync("Message", "Messaging is not available on this device.", "ok"); }
+    }
+
+    // wa.me opens the WhatsApp app when installed (else the browser) and needs the number with its country code.
+    async void OnWhatsAppClicked(object? sender, EventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_person?.Phone)) return;
+        var raw = _person.Phone.Trim();
+        var digits = new string(raw.Where(char.IsDigit).ToArray());
+        if (raw.StartsWith("00")) digits = digits[2..];
+        else if (!raw.StartsWith('+') && digits.Length == 10 && RegionInfo.CurrentRegion.TwoLetterISORegionName == "IN") digits = "91" + digits;
+        else if (!raw.StartsWith('+')) digits = digits.TrimStart('0');
+
+        try { await Launcher.Default.OpenAsync($"https://wa.me/{digits}"); }
+        catch (Exception ex) when (ex is FeatureNotSupportedException or InvalidOperationException)
+        {
+            await DisplayAlertAsync("WhatsApp", "Could not open WhatsApp.", "ok");
+        }
     }
 
     async void OnDeleteClicked(object? sender, EventArgs e)

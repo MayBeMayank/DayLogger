@@ -5,7 +5,7 @@
              x:Class="DayLogger.Pages.RemindersPage"
              Title="REMINDERS">
 
-    <c:OneUiScaffold Title="REMINDERS" Subtitle="gentle nudges, only when something is still undone">
+    <c:OneUiScaffold x:Name="Scaffold" ManualEntrance="True" Title="REMINDERS" Subtitle="gentle nudges, only when something is still undone">
         <VerticalStackLayout Padding="16" Spacing="14">
             <VerticalStackLayout x:Name="List" Spacing="14" />
             <Label Text="Streak reminders are set on each streak, under STREAKS." Style="{StaticResource Caption}" />

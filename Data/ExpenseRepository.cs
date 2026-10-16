@@ -59,12 +59,12 @@ public class ExpenseRepository
         var ids = string.Join(",", rows.Select(r => r.Id));
         var tags = await db.QueryAsync<ExpenseTag>($"SELECT * FROM ExpenseTag WHERE ExpenseId IN ({ids}) ORDER BY Id");
         var subs = (await db.Table<ExpenseSubcategory>().ToListAsync()).ToDictionary(s => s.Id, s => s.Name);
-        var people = (await db.Table<Person>().ToListAsync()).ToDictionary(p => p.Id, p => p.Name);
+        var people = (await db.Table<Person>().ToListAsync()).ToDictionary(p => p.Id);
         foreach (var r in rows)
         {
             r.Tags = tags.Where(t => t.ExpenseId == r.Id).Select(t => t.Tag).ToList();
             if (r.SubcategoryId is { } sid && subs.TryGetValue(sid, out var name)) r.SubcategoryName = name;
-            if (r.PersonId is { } pid && people.TryGetValue(pid, out var who)) r.PersonName = who;
+            if (r.PersonId is { } pid && people.TryGetValue(pid, out var who)) { r.PersonName = who.Name; r.PersonPhoto = who.Photo; }
         }
 
         // Paybacks may sit in another month than the spend they settle, so they are looked up by link, not by the rows' range.

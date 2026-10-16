@@ -11,8 +11,8 @@
         <VerticalStackLayout Padding="16">
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
-                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="name (e.g. Keep Hydrated)" ReturnType="Next" /></Border>
-                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="FrequencyEntry" Placeholder="times per day (e.g. 12)" Keyboard="Numeric" Text="1" TextChanged="OnFrequencyChanged" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="habit, e.g. drink water" ReturnType="Next" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="FrequencyEntry" Placeholder="times a day, e.g. 8" Keyboard="Numeric" Text="1" TextChanged="OnFrequencyChanged" /></Border>
 
                     <Label x:Name="ReminderLabel" Text="REMINDERS: OFF" Style="{StaticResource Caption}" />
                     <Slider x:Name="ReminderSlider" Minimum="0" Maximum="1" Value="0" ValueChanged="OnReminderCountChanged" />

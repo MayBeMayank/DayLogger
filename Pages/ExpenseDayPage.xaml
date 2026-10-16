@@ -15,32 +15,31 @@
     </Shell.TitleView>
 
     <Grid>
-    <c:OneUiScaffold x:Name="Scaffold">
+    <c:OneUiScaffold x:Name="Scaffold" ManualEntrance="True">
         <c:OneUiScaffold.Aside>
             <VerticalStackLayout Padding="16,16,16,0" Spacing="8">
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Expenses, Source={x:Reference Root}}" Spacing="8">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="m:Expense">
-                            <Border Padding="12">
+                            <Border Padding="0">
                                 <Border.Behaviors>
                                     <c:LongPressBehavior HandleTap="True" Tapped="OnExpenseTapped" Pressed="OnExpenseLongPressed" />
                                 </Border.Behaviors>
-                                <VerticalStackLayout Spacing="8">
-                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                                        <VerticalStackLayout Spacing="2">
+                                <!-- The card itself fills from the left as money comes back. -->
+                                <c:FillGrid Fraction="{Binding BackFraction}">
+                                <VerticalStackLayout Padding="12" Spacing="8">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="10">
+                                        <c:Avatar Name="{Binding PersonName}" Photo="{Binding PersonPhoto}" Size="36" IsVisible="{Binding HasPerson}" />
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                             <Label Text="{Binding Title}" />
                                             <Label Text="{Binding Detail}" IsVisible="{Binding HasDetail}" Style="{StaticResource Caption}" />
                                             <Label Text="{Binding LinkText}" IsVisible="{Binding HasLink}" Style="{StaticResource Caption}" />
+                                            <Label Text="{Binding SettleText}" IsVisible="{Binding HasSettle}" Style="{StaticResource Caption}" />
                                         </VerticalStackLayout>
-                                        <Label Grid.Column="1" Text="{Binding ReceiptMark}" VerticalOptions="Center" />
-                                        <Label Grid.Column="2" Text="{Binding AmountText}" IsVisible="{Binding IsSpend}" VerticalOptions="Center" FontAttributes="Bold" />
-                                        <Label Grid.Column="2" Text="{Binding AmountText}" IsVisible="{Binding IsPayback}" VerticalOptions="Center" FontAttributes="Bold" TextColor="{DynamicResource Primary}" />
+                                        <Label Grid.Column="2" Text="{Binding ReceiptMark}" VerticalOptions="Center" />
+                                        <Label Grid.Column="3" Text="{Binding AmountText}" IsVisible="{Binding IsSpend}" VerticalOptions="Center" FontAttributes="Bold" />
+                                        <Label Grid.Column="3" Text="{Binding AmountText}" IsVisible="{Binding IsPayback}" VerticalOptions="Center" FontAttributes="Bold" TextColor="{DynamicResource Primary}" />
                                     </Grid>
-                                    <!-- How much of this spend has come back, as a hairline fill under the row. -->
-                                    <VerticalStackLayout Spacing="4" IsVisible="{Binding HasSettle}">
-                                        <Label Text="{Binding SettleText}" Style="{StaticResource Caption}" />
-                                        <ProgressBar Progress="{Binding BackFraction}" ProgressColor="{DynamicResource Primary}" BackgroundColor="{DynamicResource Line}" />
-                                    </VerticalStackLayout>
                                     <c:Reveal IsOpen="{Binding IsExpanded}">
                                         <VerticalStackLayout Spacing="8">
                                             <Label Text="{Binding Description}" IsVisible="{Binding HasDescription}" Style="{StaticResource Caption}" />
@@ -49,6 +48,7 @@
                                         </VerticalStackLayout>
                                     </c:Reveal>
                                 </VerticalStackLayout>
+                                </c:FillGrid>
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
@@ -75,18 +75,24 @@
                     </VerticalStackLayout>
                     <c:ChipGroup x:Name="SubChips" AllowDeselect="True" IsVisible="False" />
                     <Grid ColumnDefinitions="2*,*" ColumnSpacing="8">
-                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="TitleEntry" Placeholder="title" ReturnType="Next" /></Border>
+                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="TitleEntry" Placeholder="what for, e.g. groceries" ReturnType="Next" /></Border>
                         <Border Grid.Column="1" Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="AmountEntry" Placeholder="amount" Keyboard="Numeric" /></Border>
                     </Grid>
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PersonEntry" Placeholder="with (optional): shop, vendor, person" TextChanged="OnPersonChanged" /></Border>
-                        <Button Grid.Column="1" Text="CONTACTS" Clicked="OnPickContactClicked" />
-                    </Grid>
+                    <!-- Person field: the avatar (a person glyph until a name is typed) says what it is; the book picks from contacts. -->
+                    <Border Padding="8,4" Style="{StaticResource ControlBox}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                            <c:Avatar x:Name="PersonAvatar" Size="32" />
+                            <Entry x:Name="PersonEntry" Grid.Column="1" Placeholder="shop, vendor or person" TextChanged="OnPersonChanged" />
+                            <Label Grid.Column="2" Text="&#x1F4D2;" FontSize="22" VerticalOptions="Center" Padding="6,0" SemanticProperties.Description="pick from contacts">
+                                <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnPickContactClicked" /></Label.GestureRecognizers>
+                            </Label>
+                        </Grid>
+                    </Border>
                     <FlexLayout x:Name="PersonSuggestions" Wrap="Wrap" />
-                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="DescriptionEntry" Placeholder="description (optional)" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="DescriptionEntry" Placeholder="note, bill no., details" /></Border>
 
                     <Border Padding="12,6" Style="{StaticResource ControlBox}">
-                        <Entry x:Name="TagsEntry" Placeholder="tags (optional): home, quick" TextChanged="OnTagsChanged" />
+                        <Entry x:Name="TagsEntry" Placeholder="tags, e.g. home, quick" TextChanged="OnTagsChanged" />
                     </Border>
                     <FlexLayout x:Name="TagSuggestions" Wrap="Wrap" />
 

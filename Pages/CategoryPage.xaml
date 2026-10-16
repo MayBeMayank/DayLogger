@@ -11,7 +11,7 @@
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="NAME" Style="{StaticResource Caption}" />
-                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="name" /></Border>
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="e.g. Meals, Travel, Bills" /></Border>
 
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Text="amount required" VerticalOptions="Center" />
@@ -22,7 +22,7 @@
                     <Label Text="SUBCATEGORIES" Style="{StaticResource Caption}" />
                     <VerticalStackLayout x:Name="SubList" Spacing="6" />
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NewSubEntry" Placeholder="subcategories, comma separated (breakfast, lunch)" ReturnType="Done" Completed="OnAddSubClicked" /></Border>
+                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NewSubEntry" Placeholder="e.g. breakfast, lunch, dinner" ReturnType="Done" Completed="OnAddSubClicked" /></Border>
                         <Button Grid.Column="1" Text="ADD" Clicked="OnAddSubClicked" />
                     </Grid>
 

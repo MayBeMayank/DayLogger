@@ -36,12 +36,17 @@ namespace DayLogger
             _people = services.GetRequiredService<PersonRepository>();
             _reminders = services.GetRequiredService<ReminderService>();
             SizeChanged += (_, _) => AppTitle.Margin = new Thickness(20, Math.Clamp(Height * 0.03, 16, 32), 20, 0);
+            // The section about to slide in is emptied first, so its items can fly in once it has arrived.
+            Pivot.Approaching += (section, side) => HideItems(section.Key, side);
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            if (!_built)
+            // Items fly in on the first show only. Coming back from a pushed page the list is already on screen, and
+            // hiding it after the fact (OnAppearing runs once the page is visible) flashed it, so it just refreshes in place.
+            bool first = !_built;
+            if (first)
             {
                 _built = true;
                 Pivot.SetSections(new[]
@@ -51,13 +56,21 @@ namespace DayLogger
                     Section(Settings, "Settings"),
                 }, selectKey: null);
             }
-            await RefreshBodiesAsync();
+            var key = Pivot.Selected?.Key;
+            if (first && key != null) _entering = (key, 1);
+            try { await RefreshBodiesAsync(); }
+            finally
+            {
+                _entering = null;
+                if (first && key != null && key == Pivot.Selected?.Key) Play(key, 1);
+            }
         }
 
         void OnSelectedChanged(object? sender, EventArgs e)
         {
             AddButton.IsVisible = Pivot.Selected?.Add != null;
             var key = Pivot.Selected?.Key;
+            if (key != null && key != _shown) { _shown = key; Play(key, Pivot.Direction); }
             TopButton.IsVisible = key != null && _scrolls.TryGetValue(key, out var scroll) && scroll.ScrollY > TopButtonAfter;
         }
 
@@ -101,26 +114,50 @@ namespace DayLogger
             FillSettings(_bodies[Settings]);
         }
 
+        // Items fly in every time a section arrives (from the side it came from) and when the page is shown again;
+        // refreshes in place (archive, bin, theme) just swap the rows.
+        string? _shown;                       // section whose items last flew in
+        (string Key, int From)? _entering;    // section whose rebuilt rows must start hidden until Play
+
+        void Swap(VerticalStackLayout body, List<View> items)
+        {
+            var key = _bodies.First(b => b.Value == body).Key;
+            if (_entering is { } e && e.Key == key) Motion.Hide(items, e.From);
+            body.Clear();
+            foreach (var item in items) body.Add(item);
+        }
+
+        void HideItems(string key, int from)
+        {
+            if (_bodies.TryGetValue(key, out var body)) Motion.Hide(body.Children.OfType<View>().ToList(), from);
+        }
+
+        void Play(string key, int from)
+        {
+            if (!_bodies.TryGetValue(key, out var body) || body.Count == 0) return;
+            _ = Motion.FlyInAsync(body.Children.OfType<View>().ToList(), from);
+        }
+
         // ---- streaks ----
 
         async Task FillStreaksAsync(VerticalStackLayout body)
         {
+            var items = new List<View>(); // swapped in at the end so the list never shows half-built
             var streaks = await _streaks.GetAllAsync();
             var today = DateOnly.FromDateTime(DateTime.Today);
             var checks = await _streaks.GetDayChecksAsync(today);
             int DoneToday(Streak s) => checks.GetValueOrDefault(s.Id)?.Count(i => i < s.Frequency) ?? 0;
             int left = streaks.Sum(s => Math.Max(0, s.Frequency - DoneToday(s)));
 
-            body.Clear();
-            body.Add(Big(streaks.Count == 0 ? "none yet" : left == 0 ? "all done" : $"{left} left"));
-            body.Add(Metro.Note(streaks.Count == 0 ? "tap + to start a daily habit" : $"today · {streaks.Count} streak{(streaks.Count == 1 ? "" : "s")}"));
+            items.Add(Big(Streaks, streaks.Count == 0 ? "none yet" : left == 0 ? "all done" : $"{left} left"));
+            items.Add(Metro.Note(streaks.Count == 0 ? "tap + to start a daily habit" : $"today · {streaks.Count} streak{(streaks.Count == 1 ? "" : "s")}"));
 
             foreach (var s in streaks)
             {
                 var id = s.Id;
                 var bell = ReminderService.Slots(s).Count is > 0 and var n ? $" · 🔔 {n}x" : "";
                 var streak = s;
-                body.Add(Metro.ListItem(s.Name.ToLowerInvariant(), $"today {DoneToday(s)}/{s.Frequency}{bell}",
+                items.Add(Metro.ListItem(s.Name.ToLowerInvariant(), $"today {DoneToday(s)}/{s.Frequency}{bell}",
                     () => Shell.Current.GoToAsync($"streak?id={id}"),
                     longPress: () => Menu.Show(streak.Name,
                         new BarAction("✎", "edit", () => Shell.Current.GoToAsync($"streaks?id={id}")),
@@ -132,15 +169,17 @@ namespace DayLogger
                         }))));
             }
 
-            if (streaks.Count > 0) body.Add(Metro.Note("press and hold a streak for options"));
+            if (streaks.Count > 0) items.Add(Metro.Note("press and hold a streak for options"));
             var binned = await _streaks.BinCountAsync();
-            if (binned > 0) body.Add(Metro.ListItem("bin", $"{binned} deleted streak{(binned == 1 ? "" : "s")}, restorable", () => Shell.Current.GoToAsync("streakbin")));
+            if (binned > 0) items.Add(Metro.ListItem("bin", $"{binned} deleted streak{(binned == 1 ? "" : "s")}, restorable", () => Shell.Current.GoToAsync("streakbin")));
+            Swap(body, items);
         }
 
         // ---- expenses: one row per category ----
 
         async Task FillExpensesAsync(VerticalStackLayout body)
         {
+            var items = new List<View>(); // swapped in at the end so the list never shows half-built
             var all = await _categories.GetAllAsync(includeArchived: true);
             var today = DateOnly.FromDateTime(DateTime.Today);
 
@@ -151,15 +190,14 @@ namespace DayLogger
             var total = active.Sum(r => r.Month.Sum(e => e.Net));
             var entries = active.Sum(r => r.Month.Count);
 
-            body.Clear();
-            body.Add(Big(active.Count == 0 ? "none yet" : Money.Format(total)));
-            body.Add(Metro.Note(active.Count == 0
+            items.Add(Big(Expenses, active.Count == 0 ? "none yet" : Money.Format(total)));
+            items.Add(Metro.Note(active.Count == 0
                 ? "tap + to create a category (Meals, Travel, Bills…)"
                 : $"{today.ToString("MMMM", CultureInfo.CurrentCulture).ToLowerInvariant()} · {entries} entr{(entries == 1 ? "y" : "ies")}"));
 
             var summaries = await _people.GetSummariesAsync();
             var owed = summaries.Sum(s => s.Open);
-            body.Add(Metro.ListItem("people", summaries.Count == 0
+            items.Add(Metro.ListItem("people", summaries.Count == 0
                     ? "shops, vendors and friends you deal with"
                     : $"{summaries.Count} · {(owed > 0 ? Money.Format(owed) + " yet to come back" : "nothing waiting to come back")}",
                 () => Shell.Current.GoToAsync("people")));
@@ -175,7 +213,7 @@ namespace DayLogger
                       + (pending > 0 ? $" · {Money.Format(pending)} yet to come back" : "");
 
                 var category = c;
-                body.Add(Metro.ListItem(c.Name.ToLowerInvariant(), detail,
+                items.Add(Metro.ListItem(c.Name.ToLowerInvariant(), detail,
                     () => c.Archived ? Shell.Current.GoToAsync($"category?id={id}") : Shell.Current.GoToAsync($"expenses?cat={id}"),
                     longPress: () => Menu.Show(category.Name,
                         new BarAction("✎", "edit", () => Shell.Current.GoToAsync($"category?id={id}")),
@@ -183,7 +221,8 @@ namespace DayLogger
                             ? new BarAction("↩", "restore", () => SetArchivedAsync(category, false))
                             : new BarAction("🗄", "archive", () => SetArchivedAsync(category, true)))));
             }
-            if (active.Count > 0) body.Add(Metro.Note("press and hold a category for options"));
+            if (active.Count > 0) items.Add(Metro.Note("press and hold a category for options"));
+            Swap(body, items);
         }
 
         async Task SetArchivedAsync(ExpenseCategory category, bool archived)
@@ -206,14 +245,22 @@ namespace DayLogger
                 FillSettings(body);
                 return Task.CompletedTask;
             }));
+            if (_entering is { } e && e.Key == Settings) Motion.Hide(body.Children.OfType<View>().ToList(), e.From);
         }
 
-        static Label Big(string text) => new()
+        // One headline label per section, reused across refreshes: rebuilding a 48sp label on every return flashed.
+        // Wrapped in a stack like every other row (Metro.ListItem): the rows animate cleanly, a bare 48sp label did not.
+        readonly Dictionary<string, (VerticalStackLayout Host, Label Label)> _big = new();
+
+        View Big(string key, string text)
         {
-            Text = text,
-            FontSize = 48,
-            FontFamily = Metro.LightFont,
-            Margin = new Thickness(20, 4, 20, 0),
-        };
+            if (!_big.TryGetValue(key, out var big))
+            {
+                var label = new Label { FontSize = 48, FontFamily = Metro.LightFont };
+                _big[key] = big = (new VerticalStackLayout { Padding = new Thickness(20, 4, 20, 0), Children = { label } }, label);
+            }
+            if (big.Label.Text != text) big.Label.Text = text;
+            return big.Host;
+        }
     }
 }

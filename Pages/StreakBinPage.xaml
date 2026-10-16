@@ -5,7 +5,7 @@
              x:Class="DayLogger.Pages.StreakBinPage"
              Title="BIN">
 
-    <c:OneUiScaffold Title="BIN" Subtitle="deleted streaks, history kept until you delete them forever">
+    <c:OneUiScaffold x:Name="Scaffold" ManualEntrance="True" Title="BIN" Subtitle="deleted streaks, history kept until you delete them forever">
         <VerticalStackLayout Padding="16" Spacing="14">
             <VerticalStackLayout x:Name="List" Spacing="8" />
             <Button x:Name="EmptyButton" Text="EMPTY BIN" Clicked="OnEmptyClicked" />

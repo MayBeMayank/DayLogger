@@ -4,7 +4,7 @@
              xmlns:c="clr-namespace:DayLogger.Controls"
              x:Class="DayLogger.Pages.StreakDetailPage">
 
-    <c:OneUiScaffold x:Name="Scaffold" AsideBelow="True">
+    <c:OneUiScaffold x:Name="Scaffold" ManualEntrance="True" AsideBelow="True">
         <c:OneUiScaffold.Aside>
             <VerticalStackLayout Padding="16,0,16,16" Spacing="14">
             <Border Padding="12" Style="{StaticResource Section}">
