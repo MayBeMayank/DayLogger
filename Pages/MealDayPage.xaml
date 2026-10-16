@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:DayLogger.Controls"
+             xmlns:m="clr-namespace:DayLogger.Models"
+             x:Class="DayLogger.Pages.MealDayPage"
+             x:Name="Root">
+
+    <Shell.TitleView>
+        <VerticalStackLayout VerticalOptions="Center" Spacing="0">
+            <Label x:Name="DateLabel" FontAttributes="Bold" FontSize="15" />
+            <Label x:Name="SummaryLabel" Style="{StaticResource Caption}" FontSize="10" />
+        </VerticalStackLayout>
+    </Shell.TitleView>
+
+    <c:OneUiScaffold x:Name="Scaffold">
+        <c:OneUiScaffold.Aside>
+            <VerticalStackLayout Padding="16,16,16,0">
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Meals, Source={x:Reference Root}}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="m:Meal">
+                        <Border Padding="12">
+                            <Border.Behaviors>
+                                <c:LongPressBehavior Pressed="OnMealLongPressed" />
+                            </Border.Behaviors>
+                            <VerticalStackLayout>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding Heading}" Style="{StaticResource Caption}" />
+                                        <Label Text="{Binding Dishes}" />
+                                        <Label Text="{Binding Note}" IsVisible="{Binding HasNote}" Style="{StaticResource Caption}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding PriceText}" VerticalOptions="Center" FontAttributes="Bold" />
+                                </Grid>
+                                <c:Reveal IsOpen="{Binding ShowActions}">
+                                    <c:CardActions ActionA="Edit" ActionAInvoked="OnEditAction" ActionB="Delete" ActionBInvoked="OnDeleteAction" />
+                                </c:Reveal>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+            </VerticalStackLayout>
+        </c:OneUiScaffold.Aside>
+
+        <VerticalStackLayout Padding="16">
+            <Border Padding="12" Style="{StaticResource Section}">
+                <VerticalStackLayout Spacing="10">
+                    <Label x:Name="FormTitle" Text="NEW MEAL" Style="{StaticResource Caption}" />
+                    <c:ChipGroup x:Name="TypeChips" />
+                    <c:ChipGroup x:Name="SourceChips" />
+                    <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="DishesEntry" Placeholder="dishes" ReturnType="Next" /></Border>
+                    <Grid ColumnDefinitions="*,2*" ColumnSpacing="8">
+                        <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PriceEntry" Placeholder="price (optional)" Keyboard="Numeric" /></Border>
+                        <Border Grid.Column="1" Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NoteEntry" Placeholder="note (optional)" /></Border>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Button x:Name="SaveButton" Style="{StaticResource PrimaryButton}" Text="SAVE" Clicked="OnSaveClicked" />
+                        <Button x:Name="CancelButton" Grid.Column="1" Text="CANCEL" Clicked="OnCancelClicked" IsVisible="False" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </c:OneUiScaffold>
+</ContentPage>

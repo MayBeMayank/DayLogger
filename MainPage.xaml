@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:DayLogger.Controls"
+             x:Class="DayLogger.MainPage"
+             Title="DAYLOGGER">
+
+    <Grid>
+    <c:OneUiScaffold Title="DAYLOGGER" Subtitle="what do you want to log?">
+    <VerticalStackLayout Padding="16" Spacing="12">
+        <Label Text="what do you want to log?" Style="{StaticResource Caption}" />
+
+        <Border Padding="16" Style="{StaticResource Section}">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnMealsTapped" />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="2">
+                        <Label Text="MEALS TRACKER 🍽️" FontAttributes="Bold" FontSize="16" />
+                <Label Text="what you ate, how, and what it cost" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Padding="16" Style="{StaticResource Section}">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnStreaksTapped" />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="2">
+                <Label Text="STREAKS" FontAttributes="Bold" FontSize="16" />
+                <Label Text="daily habits, ticked off and counted" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Padding="16" Style="{StaticResource Section}">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnExpensesTapped" />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="2">
+                <Label Text="EXPENSES 💸" FontAttributes="Bold" FontSize="16" />
+                <Label Text="what you spent, meals included" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Padding="16" Style="{StaticResource Section}">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnRemindersTapped" />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="2">
+                <Label Text="REMINDERS 🔔" FontAttributes="Bold" FontSize="16" />
+                <Label Text="nudges for meals and expenses" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Padding="16" Style="{StaticResource Section}">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBackupTapped" />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="2">
+                <Label Text="BACKUP &amp; RESTORE 💾" FontAttributes="Bold" FontSize="16" />
+                <Label Text="save your data to a file, bring it back anywhere" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Label Text="more trackers coming soon" Style="{StaticResource Caption}" Margin="0,8,0,0" />
+    </VerticalStackLayout>
+    </c:OneUiScaffold>
+
+    <!-- Theme toggle, icon only, pinned top-right. Tap cycles system / light / dark. -->
+    <Label x:Name="ThemeIcon" FontSize="20" WidthRequest="48" HeightRequest="48"
+           HorizontalOptions="End" VerticalOptions="Start" Margin="0,4,8,0"
+           HorizontalTextAlignment="Center" VerticalTextAlignment="Center"
+           SemanticProperties.Description="Change theme">
+        <Label.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnThemeTapped" />
+        </Label.GestureRecognizers>
+    </Label>
+    </Grid>
+</ContentPage>

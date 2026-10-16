@@ -1,0 +1,102 @@
+# DayLogger Design
+
+DayLogger follows the **Windows Phone 8 / Nokia Lumia "Metro"** design language: typography-led, flat, content over chrome. Authentic means restraint: no cards with shadows, no rounded corners, no gradients.
+
+## Principles
+
+1. **Typography is the interface.** Large, light-weight, lowercase headings carry hierarchy instead of boxes and icons.
+2. **Flat and square.** Corner radius 0 everywhere. No shadows, outlines only where an input needs one.
+3. **Fast and fluid.** Motion explains navigation (parallax, slide, turnstile), never decorates.
+4. **Content first.** Colour is used for the accent and state, not for decoration.
+5. **One accent.** A single accent colour on a plain light or dark background.
+
+## Home: the Pivot
+
+Home is a Pivot: horizontally swipeable sections, each scrolling vertically on its own.
+
+```
+ DAYLOGGER                      <- app title, small caps, 12sp, muted
+ streaks  meals  travel  +new   <- section headers, 40sp, light, lowercase
+ ───────────────────────────
+ [ active section content, vertical scroll ]
+                              [+]  <- app-bar style add button
+```
+
+**Sections (in order):** `streaks`, one per active expense category (user-ordered), `settings`.
+`+ new category` is the last header item, before the loop returns to the first section.
+
+**Headers**
+- Active header: full `Ink`. Inactive headers: `Muted`, same size.
+- The next header peeks in from the right edge as a swipe hint.
+- Headers move at about half the speed of the content (parallax), so the row slides slower than the page.
+- The row scrolls horizontally when it doesn't fit. Tapping a header jumps to that section.
+- Swiping past the last section wraps to the first, and the reverse. Header order wraps with it.
+
+**Section body**
+- A vertical list in the Metro list style: a large primary line, a muted secondary line, 16sp gutters, no dividers.
+- Each section is a launcher: month total (for categories), then the entry points into the existing calendar and day pages. The body is deliberately simple so it can be swapped for richer content later.
+- Each section keeps its own scroll position when the user swipes away and back.
+
+**Add button**
+- A single circular `+` in the bottom app-bar area, and it acts on the active section: new streak on `streaks`, new entry in the current category on an expense section. Hidden on `settings` and on the `+ new category` header.
+- No inline add forms on the home page.
+
+## Typography
+
+| Role | Size | Weight | Notes |
+|---|---|---|---|
+| Pivot header | 40sp | Light | lowercase |
+| Page title | 32sp | Light | lowercase |
+| List primary | 20sp | Regular | |
+| List secondary | 14sp | Regular | `Muted` |
+| App title | 12sp | Semibold | UPPERCASE, letter-spaced, `Muted` |
+| Body / input | 14–16sp | Regular | |
+
+Font: Segoe UI (Light, Semilight, Regular) on Windows. On Android use the system light sans (`sans-serif-light`). Bundled `OpenSans` stays as the fallback. Use lowercase for headers and titles, not Title Case.
+
+## Colour
+
+Colours come from `ThemeService` keys and are always bound with `DynamicResource` (see CLAUDE.md). The key set is unchanged: `Paper`, `Surface`, `Ink`, `Muted`, `Line`, `Faint`, `Primary`, `OnPrimary`, `Accent`.
+
+- Page background is `Paper`: pure black in dark mode, white in light mode (Metro, not tinted greys).
+- `Primary` is the single accent and is used for the active state, the `+` button, links and progress.
+- `Surface` is only for tiles that need to separate from the page; most content sits directly on `Paper`.
+- Platform accent sourcing (Material You, Windows accent) is kept. Only the geometry changes.
+
+## Shape, spacing and components
+
+- Corner radius is 0 on `Border`, `Button` and inputs. This replaces the current 12/16/20 radii in `Styles.xaml`.
+- Page gutter 16dp (Metro used 12/24). Vertical rhythm in multiples of 8.
+- **Tiles** (for settings entries and category management): flat `Accent` fill, square, label bottom-left in the primary text size.
+- **Buttons:** flat rectangles, uppercase 12sp semibold label, 2px outline in `Ink` for secondary, `Primary` fill for primary.
+- **Inputs:** underline-free filled rectangle with `Surface` background and a 2px `Primary` border while focused. Labels are small and muted above the input.
+- **Toggles / choices:** Metro toggle switch, text labels "on" / "off".
+- **Chips (subcategory and tag pickers):** flat rectangles, no radius, filled with `Primary` when selected.
+- **Confirmations:** full-width bottom bar or a centred modal with two flat text buttons. No bubbly dialogs.
+- **Destructive actions** (delete a category with entries, empty the bin) always name the consequence and use the `Primary` button for the safe choice.
+
+## Motion
+
+- Pivot swipe: content follows the finger 1:1, headers at about 0.5x. Settle with a standard ease-out, about 250ms.
+- Page navigation: turnstile-style (the outgoing page tilts away, the incoming page tilts in), about 250ms. Fall back to a slide where Shell does not allow it.
+- List items stagger in about 30ms apart on first load of a section. Not on every return.
+- Respect the system "reduce motion" setting by disabling parallax and staggering.
+
+## Expense category pages
+
+- **Category settings:** name, subcategories (reorderable list), "amount required" toggle, reminder time, archive and delete actions. Reachable from the `settings` section and by long-pressing a section header.
+- **Entry form:** subcategory selector (chips), amount (required or optional by category), title, tags (free-typed with suggestions from tags used before, shared across categories), note, receipt photo.
+- **Calendar and day pages** reuse the existing `CalendarView` and day-list layout, scoped to the category, restyled flat.
+
+## Accessibility
+
+- Minimum touch target 48dp, including header items and the `+` button.
+- Contrast: `Ink` on `Paper` and `Muted` on `Paper` meet WCAG AA. Check `Muted` after any palette change.
+- Every icon-only control has a `SemanticProperties.Description`.
+- Swipe is never the only way: header taps and the `+` button give an alternative.
+
+## Out of scope for now
+
+- Charts and analysis (expense distribution by category, subcategory, tag or date range). The data model is designed for it, but no UI yet.
+- Inline home-section content beyond the launcher.
+- Tablet / landscape-specific pivot layouts. Phone portrait comes first, landscape just stretches.

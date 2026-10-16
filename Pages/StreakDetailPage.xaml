@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:c="clr-namespace:DayLogger.Controls"
+             x:Class="DayLogger.Pages.StreakDetailPage">
+
+    <c:OneUiScaffold x:Name="Scaffold" AsideBelow="True">
+        <c:OneUiScaffold.Aside>
+            <VerticalStackLayout Padding="16,0,16,16" Spacing="14">
+            <Border Padding="12" Style="{StaticResource Section}">
+                <VerticalStackLayout Spacing="10">
+                    <Label x:Name="DayLabel" Style="{StaticResource Caption}" />
+                    <c:TickRow x:Name="Ticks" TicksChanged="OnTicksChanged" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="12">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="THIS MONTH" Style="{StaticResource Caption}" />
+                    <Label x:Name="MonthLabel" FontAttributes="Bold" />
+                    <Label x:Name="StreakLabel" Style="{StaticResource Caption}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="SHARE" Clicked="OnShareClicked" />
+            </VerticalStackLayout>
+        </c:OneUiScaffold.Aside>
+
+        <VerticalStackLayout Padding="16,16,16,0">
+            <c:CalendarView x:Name="Calendar" DaySelected="OnDaySelected" MonthChanged="OnMonthChanged" />
+        </VerticalStackLayout>
+    </c:OneUiScaffold>
+</ContentPage>

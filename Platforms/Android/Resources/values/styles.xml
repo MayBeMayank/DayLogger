@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Replaces MAUI's post-splash theme. Follows system/app light-dark. The static yellow scheme is the
+         fallback below Android 12; on 12+ DynamicColors (see MainActivity) overlays the wallpaper scheme. -->
+    <style name="Maui.MainTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#FCB512</item>
+        <item name="colorOnPrimary">#1C1B17</item>
+        <item name="colorPrimaryContainer">#FFF3D1</item>
+        <item name="colorOnPrimaryContainer">#1C1B17</item>
+        <item name="colorSecondary">#FCB512</item>
+        <item name="colorOnSecondary">#1C1B17</item>
+        <item name="colorSecondaryContainer">#FFF3D1</item>
+        <item name="colorOnSecondaryContainer">#1C1B17</item>
+    </style>
+</resources>
