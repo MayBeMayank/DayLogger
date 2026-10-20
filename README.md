@@ -9,13 +9,13 @@ The UI follows a Windows Phone "Metro" design language: typography-led, flat, sq
 The home screen is a looping, swipeable **pivot** with three sections:
 
 - **Streaks**: every streak with today's progress. Tap one to open its calendar and tick today; long-press to edit or bin it. Binned streaks are listed at the bottom.
-- **Expenses**: user-defined categories with their month totals. Tap one to open its calendar and day pages; long-press to edit, archive or restore it.
+- **Expenses**: user-defined categories with their month totals. Tap one to open its calendar and day pages; open its page from Settings to edit, archive or restore it.
   - Each category has its own subcategories, an "amount required" setting and optional reminders.
   - Entries have a subcategory, amount (optional where the category allows), title, free-typed tags, a note and a receipt photo.
   - Categories can be reordered, archived, or deleted (moving their entries elsewhere or deleting them too).
 - **Settings**: Reminders (per category), Backup & Restore, and the light/dark theme toggle.
 
-The round `+` button adds to the active section (new streak or new category) and is hidden on Settings. A back-to-top button appears after scrolling a long list.
+The round `+` button adds to the active section (new streak, or a new expense whose category is picked in the form) and is hidden on Settings. Categories are managed under Settings → manage categories. Tap the big total on Expenses to open a calendar of all categories; a day shows everything spent that day, grouped by category. Editing an entry lets you move it to another category. A back-to-top button appears after scrolling a long list.
 
 Other details:
 

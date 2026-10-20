@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_quick_add_description">One tap to log an expense</string>
+    <string name="widget_quick_entry_description">Log an expense in a small sheet, without opening the app</string>
+</resources>

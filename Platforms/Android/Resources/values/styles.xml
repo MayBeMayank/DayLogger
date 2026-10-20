@@ -12,4 +12,10 @@
         <item name="colorSecondaryContainer">#FFF3D1</item>
         <item name="colorOnSecondaryContainer">#1C1B17</item>
     </style>
+
+    <!-- Quick-entry sheet: transparent window, the sheet draws itself over a dimmed home screen. -->
+    <style name="QuickEntryTheme" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>

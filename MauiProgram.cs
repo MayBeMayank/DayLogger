@@ -33,6 +33,9 @@ namespace DayLogger
             builder.Services.AddTransient<ExpensesCalendarPage>();
             builder.Services.AddTransient<ExpenseDayPage>();
             builder.Services.AddTransient<CategoryPage>();
+            builder.Services.AddTransient<CategoriesPage>();
+            builder.Services.AddTransient<SearchPage>();
+            builder.Services.AddTransient<InsightsPage>();
             builder.Services.AddTransient<PeoplePage>();
             builder.Services.AddTransient<PersonPage>();
             builder.Services.AddTransient<StreaksPage>();
@@ -48,6 +51,26 @@ namespace DayLogger
 #elif WINDOWS
                 handler.PlatformView.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
                 handler.PlatformView.Background = null;
+#endif
+            });
+
+            // Native buttons clip a second line of text: Material buttons carry built-in top/bottom insets and a fixed
+            // minimum height, and a WinUI button's text block does not wrap. Let the label wrap and the button grow.
+            Microsoft.Maui.Handlers.ButtonHandler.Mapper.AppendToMapping("WrapLabel", (handler, view) =>
+            {
+#if ANDROID
+                if (handler.PlatformView is Google.Android.Material.Button.MaterialButton b)
+                {
+                    b.SetSingleLine(false);
+                    b.SetMaxLines(int.MaxValue);
+                    b.Ellipsize = null;
+                    b.InsetTop = b.InsetBottom = 0;
+                    b.SetMinHeight(0);
+                    b.SetMinimumHeight(0);
+                }
+#elif WINDOWS
+                if (handler.PlatformView.Content is Microsoft.UI.Xaml.Controls.TextBlock t)
+                    t.TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap;
 #endif
             });
 

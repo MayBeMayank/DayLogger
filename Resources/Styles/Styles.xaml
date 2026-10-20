@@ -55,6 +55,12 @@
         <Setter Property="TextColor" Value="{DynamicResource Muted}" />
     </Style>
 
+    <!-- Small uppercase heading that opens a group on a page: accent coloured so sections read as sections. -->
+    <Style x:Key="SectionLabel" TargetType="Label" BasedOn="{StaticResource Caption}">
+        <Setter Property="TextColor" Value="{DynamicResource Primary}" />
+        <Setter Property="FontAttributes" Value="Bold" />
+    </Style>
+
     <Style TargetType="Entry">
         <Setter Property="TextColor" Value="{DynamicResource Ink}" />
         <Setter Property="PlaceholderColor" Value="{DynamicResource Muted}" />
@@ -99,14 +105,21 @@
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="20,10" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
     </Style>
 
     <Style TargetType="Button">
         <Setter Property="TextColor" Value="{DynamicResource Ink}" />
         <Setter Property="BackgroundColor" Value="{DynamicResource Accent}" />
+        <Setter Property="BorderColor" Value="{DynamicResource Primary}" />
+        <Setter Property="BorderWidth" Value="2" />
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="Padding" Value="20,10" />
+        <!-- A label that wraps grows the button; see the Button handler tweak in MauiProgram. -->
+        <Setter Property="LineBreakMode" Value="WordWrap" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
     </Style>
 </ResourceDictionary>

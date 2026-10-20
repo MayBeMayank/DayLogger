@@ -127,20 +127,25 @@ public static class Motion
         _active++;
         try
         {
-            await Task.WhenAll(runs.Select((r, i) => TurnOneAsync(r.View, r.Token, i * TurnStep)));
+            // A row removed from the page mid-flip (a list rebuilt on return) can leave its animation unfinished for good;
+            // the others must not wait for it, or the title would stay turned.
+            await Task.WhenAny(Task.WhenAll(runs.Select((r, i) => TurnOneAsync(r.View, r.Token, i * TurnStep))), Task.Delay(3000));
         }
         finally
         {
             _active--;
-            foreach (var (v, token) in runs)
-            {
-                if (!Owns(v, token)) continue;
-                Layer(v, false);
-                v.Opacity = 1; v.RotationY = 0;
-                v.AnchorX = Anchors.TryGetValue(v, out var box) ? box.Value : 0.5;
-                Anchors.Remove(v);
-            }
+            foreach (var (v, token) in runs) SettleTurn(v, token);
         }
+    }
+
+    static void SettleTurn(View v, object token)
+    {
+        if (!Owns(v, token)) return;
+        v.CancelAnimations();
+        Layer(v, false);
+        v.Opacity = 1; v.RotationY = 0;
+        v.AnchorX = Anchors.TryGetValue(v, out var box) ? box.Value : 0.5;
+        Anchors.Remove(v);
     }
 
     static async Task TurnOneAsync(View v, object token, int delay)
@@ -150,5 +155,6 @@ public static class Motion
         await Task.WhenAll(
             v.FadeToAsync(1, FlipMs, Easing.CubicOut),
             v.RotateYToAsync(0, FlipMs, Easing.CubicOut));
+        SettleTurn(v, token); // each view settles as soon as its own flip is over
     }
 }

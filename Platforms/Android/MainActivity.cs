@@ -1,4 +1,6 @@
 using Android.App;
+using Android.Content;
+using DayLogger.Services;
 using Android.Content.PM;
 using Android.OS;
 
@@ -12,6 +14,18 @@ namespace DayLogger
             // Android 12+: wallpaper-based Material You colours for dialogs etc. Older: the static theme.
             Google.Android.Material.Color.DynamicColors.ApplyToActivityIfAvailable(this);
             base.OnCreate(savedInstanceState);
+            Handle(Intent);
+        }
+
+        protected override void OnNewIntent(Intent? intent)
+        {
+            base.OnNewIntent(intent);
+            Handle(intent);
+        }
+
+        static void Handle(Intent? intent)
+        {
+            if (intent?.DataString == QuickAdd.ExpenseUri) QuickAdd.Request();
         }
     }
 }

@@ -3,4 +3,5 @@
     <color name="colorPrimary">#FCB512</color>
     <color name="colorPrimaryDark">#B88200</color>
     <color name="colorAccent">#B88200</color>
+    <color name="widgetInk">#1A1A1A</color>
 </resources>
