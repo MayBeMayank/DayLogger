@@ -10,7 +10,7 @@
         <VerticalStackLayout Padding="16" Spacing="14">
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="PASSWORD (OPTIONAL)" Style="{StaticResource Caption}" />
+                    <Label Text="PASSWORD (OPTIONAL)" Style="{StaticResource SectionLabel}" />
                     <Label Text="Leave empty for a plain backup. Fill it in to encrypt a new backup, or to open an encrypted one. There is no way to recover a forgotten password." Style="{StaticResource Caption}" />
                     <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="PasswordEntry" Placeholder="password" IsPassword="True" TextChanged="OnPasswordChanged" /></Border>
                     <Border x:Name="RepeatBox" Padding="12,6" Style="{StaticResource ControlBox}" IsVisible="False"><Entry x:Name="RepeatEntry" Placeholder="repeat password" IsPassword="True" /></Border>
@@ -19,7 +19,7 @@
 
             <Border Padding="12">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="BACK UP" Style="{StaticResource Caption}" />
+                    <Label Text="BACK UP" Style="{StaticResource SectionLabel}" />
                     <Label Text="Expenses by category with receipts, streaks and their history, and the bin. Then pick where to send the file: Drive, email, chat, nearby device." />
                     <Button x:Name="BackupButton" Style="{StaticResource PrimaryButton}" Text="CREATE BACKUP" Clicked="OnBackupClicked" />
                 </VerticalStackLayout>
@@ -27,7 +27,7 @@
 
             <Border Padding="12">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="RESTORE" Style="{StaticResource Caption}" />
+                    <Label Text="RESTORE" Style="{StaticResource SectionLabel}" />
                     <Label Text="Restoring merges: it adds what's missing and never changes or deletes what you already have, so it's safe to restore more than once." />
                     <Button x:Name="RestoreButton" Text="RESTORE FROM FILE" Clicked="OnRestoreClicked" />
                 </VerticalStackLayout>

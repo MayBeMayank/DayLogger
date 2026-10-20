@@ -14,6 +14,10 @@ namespace DayLogger
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
+            // Android destroys and recreates the activity (e.g. coming back from another app) while the process lives on, and
+            // asks for a window each time. Hand back the one that exists, so the user returns to the page they left, not the splash.
+            if (Windows.Count > 0) return Windows[0];
+
             var splash = new SplashPage();
             var window = new Window(splash);
             splash.Finished += (_, _) => window.Page = new AppShell();

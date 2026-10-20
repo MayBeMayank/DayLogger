@@ -18,6 +18,10 @@
     <c:OneUiScaffold x:Name="Scaffold" ManualEntrance="True">
         <c:OneUiScaffold.Aside>
             <VerticalStackLayout Padding="16,16,16,0" Spacing="8">
+                <!-- What went where on this day, one line per category (shown when more than one is involved). -->
+                <Border x:Name="BreakdownBox" IsVisible="False" Padding="12">
+                    <VerticalStackLayout x:Name="BreakdownList" Spacing="4" />
+                </Border>
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Expenses, Source={x:Reference Root}}" Spacing="8">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="m:Expense">
@@ -59,7 +63,7 @@
         <VerticalStackLayout Padding="16">
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
-                    <Label x:Name="FormTitle" Text="NEW ENTRY" Style="{StaticResource Caption}" />
+                    <Label x:Name="FormTitle" Text="NEW ENTRY" Style="{StaticResource SectionLabel}" />
                     <!-- Pivot-style switch: the active word is large, the other muted. -->
                     <HorizontalStackLayout Spacing="18">
                         <Label x:Name="SpentTab" Text="spent" FontSize="24">
@@ -70,9 +74,11 @@
                         </Label>
                     </HorizontalStackLayout>
                     <VerticalStackLayout x:Name="LinkBox" IsVisible="False" Spacing="6">
-                        <Label Text="SETTLES (OPTIONAL)" Style="{StaticResource Caption}" />
+                        <Label Text="SETTLES (OPTIONAL)" Style="{StaticResource SectionLabel}" />
                         <c:ChipGroup x:Name="LinkChips" AllowDeselect="True" SelectionChanged="OnLinkChanged" />
                     </VerticalStackLayout>
+                    <Label Text="CATEGORY" Style="{StaticResource SectionLabel}" />
+                    <c:ChipGroup x:Name="CatChips" SelectionChanged="OnCategoryChanged" />
                     <c:ChipGroup x:Name="SubChips" AllowDeselect="True" IsVisible="False" />
                     <Grid ColumnDefinitions="2*,*" ColumnSpacing="8">
                         <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="TitleEntry" Placeholder="what for, e.g. groceries" ReturnType="Next" /></Border>
@@ -104,7 +110,7 @@
                         <Switch x:Name="ExpectSwitch" Grid.Column="1" />
                     </Grid>
 
-                    <Label Text="RECEIPT (OPTIONAL)" Style="{StaticResource Caption}" />
+                    <Label Text="RECEIPT (OPTIONAL)" Style="{StaticResource SectionLabel}" />
                     <Border x:Name="ReceiptBox" IsVisible="False" Padding="4" Style="{StaticResource ControlBox}">
                         <Image x:Name="ReceiptImage" HeightRequest="180" Aspect="AspectFit" />
                     </Border>

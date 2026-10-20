@@ -20,6 +20,7 @@ namespace DayLogger
         readonly PersonRepository _people;
         readonly ReminderService _reminders;
 
+        const string SectionPref = "home.section";
         const double TopButtonAfter = 300; // dp scrolled before the back-to-top button shows
 
         readonly Dictionary<string, VerticalStackLayout> _bodies = new();
@@ -35,6 +36,7 @@ namespace DayLogger
             _expenses = services.GetRequiredService<ExpenseRepository>();
             _people = services.GetRequiredService<PersonRepository>();
             _reminders = services.GetRequiredService<ReminderService>();
+            QuickAdd.Requested += () => MainThread.BeginInvokeOnMainThread(OpenQuickAdd);
             SizeChanged += (_, _) => AppTitle.Margin = new Thickness(20, Math.Clamp(Height * 0.03, 16, 32), 20, 0);
             // The section about to slide in is emptied first, so its items can fly in once it has arrived.
             Pivot.Approaching += (section, side) => HideItems(section.Key, side);
@@ -51,13 +53,14 @@ namespace DayLogger
                 _built = true;
                 Pivot.SetSections(new[]
                 {
+                    Section(Expenses, "Expenses", add: AddExpenseAsync),
                     Section(Streaks, "Streaks", add: () => Shell.Current.GoToAsync("streaks")),
-                    Section(Expenses, "Expenses", add: () => Shell.Current.GoToAsync("category?id=0")),
                     Section(Settings, "Settings"),
-                }, selectKey: null);
+                }, selectKey: Preferences.Get(SectionPref, null));
             }
             var key = Pivot.Selected?.Key;
             if (first && key != null) _entering = (key, 1);
+            if (first) OpenQuickAdd(); // a widget tap that cold-started the app
             try { await RefreshBodiesAsync(); }
             finally
             {
@@ -70,6 +73,7 @@ namespace DayLogger
         {
             AddButton.IsVisible = Pivot.Selected?.Add != null;
             var key = Pivot.Selected?.Key;
+            if (key != null) Preferences.Set(SectionPref, key); // reopening the app lands on the section it was left on
             if (key != null && key != _shown) { _shown = key; Play(key, Pivot.Direction); }
             TopButton.IsVisible = key != null && _scrolls.TryGetValue(key, out var scroll) && scroll.ScrollY > TopButtonAfter;
         }
@@ -106,6 +110,15 @@ namespace DayLogger
             };
             return new PivotSection { Key = key, Header = header, Content = scroll, Add = add };
         }
+
+        void OpenQuickAdd()
+        {
+            if (QuickAdd.Take()) _ = AddExpenseAsync();
+        }
+
+        // "+" on expenses logs an entry (the form picks its category); with no category yet there is nothing to file under.
+        async Task AddExpenseAsync() =>
+            await Shell.Current.GoToAsync((await _categories.GetAllAsync()).Count == 0 ? "category?id=0" : $"expenseday?date={Today}&add=1");
 
         async Task RefreshBodiesAsync()
         {
@@ -190,17 +203,20 @@ namespace DayLogger
             var total = active.Sum(r => r.Month.Sum(e => e.Net));
             var entries = active.Sum(r => r.Month.Count);
 
-            items.Add(Big(Expenses, active.Count == 0 ? "none yet" : Money.Format(total)));
+            // The headline opens the all-categories calendar, whose days show everything spent that day.
+            items.Add(Big(Expenses, active.Count == 0 ? "none yet" : Money.Format(total), () => Shell.Current.GoToAsync("expenses")));
             items.Add(Metro.Note(active.Count == 0
                 ? "tap + to create a category (Meals, Travel, Bills…)"
-                : $"{today.ToString("MMMM", CultureInfo.CurrentCulture).ToLowerInvariant()} · {entries} entr{(entries == 1 ? "y" : "ies")}"));
+                : $"{today.ToString("MMMM", CultureInfo.CurrentCulture).ToLowerInvariant()} · {entries} entr{(entries == 1 ? "y" : "ies")} · tap the total for a day-wise view"));
 
+            // The app's own tools are solid tiles; everything below the CATEGORIES heading is the user's own text rows.
             var summaries = await _people.GetSummariesAsync();
-            var owed = summaries.Sum(s => s.Open);
-            items.Add(Metro.ListItem("people", summaries.Count == 0
-                    ? "shops, vendors and friends you deal with"
-                    : $"{summaries.Count} · {(owed > 0 ? Money.Format(owed) + " yet to come back" : "nothing waiting to come back")}",
-                () => Shell.Current.GoToAsync("people")));
+            var tiles = new Grid { ColumnSpacing = 6, Padding = new Thickness(20, 12, 20, 0), ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star) } };
+            tiles.Add(Metro.Tile("search", (await _expenses.CountAsync()).ToString(), () => Shell.Current.GoToAsync("search")));
+            tiles.Add(Metro.Tile("insights", Money.Compact(total), () => Shell.Current.GoToAsync("insights")), 1);
+            tiles.Add(Metro.Tile("people", summaries.Count.ToString(), () => Shell.Current.GoToAsync("people")), 2);
+            items.Add(tiles);
+            items.Add(Metro.Heading("categories"));
 
             foreach (var (c, month) in rows)
             {
@@ -212,24 +228,10 @@ namespace DayLogger
                     : $"{(sum != 0 ? Money.Format(sum) + " · " : "")}{month.Count} entr{(month.Count == 1 ? "y" : "ies")} this month"
                       + (pending > 0 ? $" · {Money.Format(pending)} yet to come back" : "");
 
-                var category = c;
                 items.Add(Metro.ListItem(c.Name.ToLowerInvariant(), detail,
-                    () => c.Archived ? Shell.Current.GoToAsync($"category?id={id}") : Shell.Current.GoToAsync($"expenses?cat={id}"),
-                    longPress: () => Menu.Show(category.Name,
-                        new BarAction("✎", "edit", () => Shell.Current.GoToAsync($"category?id={id}")),
-                        category.Archived
-                            ? new BarAction("↩", "restore", () => SetArchivedAsync(category, false))
-                            : new BarAction("🗄", "archive", () => SetArchivedAsync(category, true)))));
+                    () => c.Archived ? Shell.Current.GoToAsync($"category?id={id}") : Shell.Current.GoToAsync($"expenses?cat={id}")));
             }
-            if (active.Count > 0) items.Add(Metro.Note("press and hold a category for options"));
             Swap(body, items);
-        }
-
-        async Task SetArchivedAsync(ExpenseCategory category, bool archived)
-        {
-            await _categories.SetArchivedAsync(category, archived);
-            await _reminders.RefreshAllAsync();
-            await RefreshBodiesAsync();
         }
 
         // ---- settings ----
@@ -237,6 +239,7 @@ namespace DayLogger
         void FillSettings(VerticalStackLayout body)
         {
             body.Clear();
+            body.Add(Metro.ListItem("manage categories", "add, edit, reorder or archive expense categories", () => Shell.Current.GoToAsync("categories")));
             body.Add(Metro.ListItem("reminders", "nudges for streaks and categories", () => Shell.Current.GoToAsync("reminders")));
             body.Add(Metro.ListItem("backup & restore", "save your data to a file, bring it back anywhere", () => Shell.Current.GoToAsync("backup")));
             body.Add(Metro.ListItem("theme", ThemeService.Mode.ToString().ToLowerInvariant() + " · tap to change", () =>
@@ -252,12 +255,14 @@ namespace DayLogger
         // Wrapped in a stack like every other row (Metro.ListItem): the rows animate cleanly, a bare 48sp label did not.
         readonly Dictionary<string, (VerticalStackLayout Host, Label Label)> _big = new();
 
-        View Big(string key, string text)
+        View Big(string key, string text, Func<Task>? tapped = null)
         {
             if (!_big.TryGetValue(key, out var big))
             {
                 var label = new Label { FontSize = 48, FontFamily = Metro.LightFont };
-                _big[key] = big = (new VerticalStackLayout { Padding = new Thickness(20, 4, 20, 0), Children = { label } }, label);
+                var host = new VerticalStackLayout { Padding = new Thickness(20, 4, 20, 0), Children = { label } };
+                if (tapped != null) host.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(async () => await tapped()) });
+                _big[key] = big = (host, label);
             }
             if (big.Label.Text != text) big.Label.Text = text;
             return big.Host;

@@ -48,6 +48,10 @@ public class Expense : INotifyPropertyChanged
     /// <summary>Filled in by the repository when entries are loaded.</summary>
     [Ignore] public List<string> Tags { get; set; } = new();
     [Ignore] public string? SubcategoryName { get; set; }
+    [Ignore] public string? CategoryName { get; set; }
+
+    /// <summary>UI-only: day pages that mix categories show each entry's category in its detail line.</summary>
+    [Ignore] public bool ShowCategory { get; set; }
     [Ignore] public string? PersonName { get; set; }
     [Ignore] public string? PersonPhoto { get; set; }
     [Ignore] public bool HasPerson => PersonName != null;
@@ -115,7 +119,7 @@ public class Expense : INotifyPropertyChanged
 
     /// <summary>"breakfast · #home #quick", whichever parts exist.</summary>
     [Ignore]
-    public string Detail => string.Join(" · ", new[] { PersonName, SubcategoryName, Tags.Count > 0 ? string.Join(" ", Tags.Select(t => "#" + t)) : null }
+    public string Detail => string.Join(" · ", new[] { ShowCategory ? CategoryName : null, PersonName, SubcategoryName, Tags.Count > 0 ? string.Join(" ", Tags.Select(t => "#" + t)) : null }
         .Where(s => !string.IsNullOrEmpty(s)));
 
     [Ignore] public bool HasDetail => Detail.Length > 0;

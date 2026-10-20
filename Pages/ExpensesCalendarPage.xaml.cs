@@ -4,7 +4,7 @@ using DayLogger.Models;
 
 namespace DayLogger.Pages;
 
-/// <summary>Month calendar of one expense category; a day opens that category's day page.</summary>
+/// <summary>Month calendar of one expense category, or (no category) of all of them; a day opens its day page.</summary>
 [QueryProperty(nameof(CategoryIdText), "cat")]
 public partial class ExpensesCalendarPage : ContentPage
 {
@@ -25,10 +25,13 @@ public partial class ExpensesCalendarPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        _category = await _categories.GetAsync(_categoryId);
-        if (_category == null) { await Shell.Current.GoToAsync(".."); return; }
-        Scaffold.Title = _category.Name;
-        Scaffold.Subtitle = "tap a day to log or review";
+        if (_categoryId != 0)
+        {
+            _category = await _categories.GetAsync(_categoryId);
+            if (_category == null) { await Shell.Current.GoToAsync(".."); return; }
+        }
+        Scaffold.Title = _category?.Name ?? "all expenses";
+        Scaffold.Subtitle = _category == null ? "tap a day to see what went where" : "tap a day to log or review";
         await LoadMonthAsync();
         // Data and text are in place before the page flips in, so nothing is rebuilt mid-animation.
         await Scaffold.EnterAsync();
@@ -36,9 +39,9 @@ public partial class ExpensesCalendarPage : ContentPage
 
     async Task LoadMonthAsync()
     {
-        if (_category == null) return;
+        if (_categoryId != 0 && _category == null) return;
         var month = Calendar.Month;
-        var expenses = await _expenses.GetMonthAsync(_category.Id, month.Year, month.Month);
+        var expenses = await _expenses.GetMonthAsync(_category?.Id, month.Year, month.Month);
         if (month != Calendar.Month) return; // user paged away while loading
 
         var perDay = expenses.GroupBy(e => int.Parse(e.Date[8..]))
@@ -53,7 +56,9 @@ public partial class ExpensesCalendarPage : ContentPage
     }
 
     async void OnDaySelected(object? sender, DateOnly day) =>
-        await Shell.Current.GoToAsync($"expenseday?cat={_categoryId}&date={DateKey.Of(day)}");
+        await Shell.Current.GoToAsync(_categoryId == 0
+            ? $"expenseday?date={DateKey.Of(day)}"
+            : $"expenseday?cat={_categoryId}&date={DateKey.Of(day)}");
 
     async void OnMonthChanged(object? sender, DateTime month) => await LoadMonthAsync();
 }

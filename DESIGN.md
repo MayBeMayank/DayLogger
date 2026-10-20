@@ -100,6 +100,22 @@ Colours come from `ThemeService` keys and are always bound with `DynamicResource
 - **Entry form:** subcategory selector (chips), amount (required or optional by category), title, tags (free-typed with suggestions from tags used before, shared across categories), note, receipt photo.
 - **Calendar and day pages** reuse the existing `CalendarView` and day-list layout, scoped to the category, restyled flat.
 
+## Search
+
+A pushed page (`SearchPage`), not an inline box: the `search` row heads the expenses list. Top to bottom: the query box, WHEN chips (any time, this month, last month, last 30 days, this year, pick dates, which reveals two date pickers), CATEGORY chips (tap again to clear), SHOW chips (everything / spent / got back), a one-line count and net total, then results grouped under date headings. Results update as you type or change a filter; tapping one opens that day.
+
+## Accent on headings
+
+Anything that names a section is `Primary`: the active pivot header (inactive ones stay `Muted`), the large page title, the small uppercase group labels (`SectionLabel` style, `Metro.Heading`, which also heads the date groups on search) and the 2px outline of secondary buttons. Body text, list lines and amounts stay `Ink`/`Muted`, so the accent only ever marks structure.
+
+## Features vs your own data
+
+Two kinds of rows share the expenses section, so they must never look alike. The app's tools (`search`, `insights`, `people`) are **tiles**: flat solid `Primary` squares in a row of three, `OnPrimary` text, a live figure top-left (entry count, this month's total, number of people) and the label bottom-left. The user's categories sit under a small `CATEGORIES` heading as plain text rows. Solid colour means "the app", plain type means "yours".
+
+## Insights
+
+A pushed page (`InsightsPage`). WHEN chips (same presets as search) and BY chips (category, subcategory, tag, person, month), then the range's total at 48sp light with a muted line (entries, average a day), then one bar per group: lowercase name left, amount right, a 10dp `Primary` bar on a `Faint` rail, and a caption with entry count and share. Months run chronologically, the rest by size; beyond 12 groups the tail folds into "N more". Tag bars show no share because an entry counts under each of its tags. Tapping a bar opens search filtered to its entries.
+
 ## Accessibility
 
 - Minimum touch target 48dp, including header items and the `+` button.
@@ -109,6 +125,6 @@ Colours come from `ThemeService` keys and are always bound with `DynamicResource
 
 ## Out of scope for now
 
-- Charts and analysis (expense distribution by category, subcategory, tag or date range). The data model is designed for it, but no UI yet.
+- Line/trend charts and comparing two ranges. Insights has bar breakdowns only.
 - Inline home-section content beyond the lists described above.
 - Tablet / landscape-specific pivot layouts. Phone portrait comes first, landscape just stretches.

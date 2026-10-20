@@ -9,7 +9,7 @@
             <VerticalStackLayout Padding="16,0,16,16">
                 <Border Padding="12">
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="THIS MONTH" Style="{StaticResource Caption}" />
+                        <Label Text="THIS MONTH" Style="{StaticResource SectionLabel}" />
                         <Label x:Name="TotalLabel" FontAttributes="Bold" FontSize="18" />
                         <Label x:Name="SplitLabel" Style="{StaticResource Caption}" />
                     </VerticalStackLayout>

@@ -16,7 +16,7 @@
 
             <Border Padding="12">
                 <VerticalStackLayout Spacing="4">
-                    <Label Text="THIS MONTH" Style="{StaticResource Caption}" />
+                    <Label Text="THIS MONTH" Style="{StaticResource SectionLabel}" />
                     <Label x:Name="MonthLabel" FontAttributes="Bold" />
                     <Label x:Name="StreakLabel" Style="{StaticResource Caption}" />
                 </VerticalStackLayout>

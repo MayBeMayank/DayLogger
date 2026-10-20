@@ -234,6 +234,8 @@ public class PivotView : ContentView
         double x = Gutter - shift;
         for (int k = 0; k < 40; k++)
         {
+            // The strip is the list rotated to start at the active header: every header exactly once, however wide the screen.
+            if (k >= n) break;
             int section = Mod(first + k, n);
             layout.Add((section, x, k, k - frac));
             x += HeaderWidth(section) * ScaleFor(k - frac) + Gap;
@@ -247,7 +249,7 @@ public class PivotView : ContentView
             _headers.Add(label);
         }
 
-        Color ink = Metro.Colour("Ink"), muted = Metro.Colour("Muted");
+        Color ink = Metro.Colour("Primary"), muted = Metro.Colour("Muted");
         _slots.Clear();
         for (int i = 0; i < _pool.Count; i++)
         {

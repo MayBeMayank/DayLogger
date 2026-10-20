@@ -52,7 +52,7 @@ public partial class RemindersPage : ContentPage
         picker.TimeSelected += Changed;
 
         var head = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
-        head.Add(new Label { Text = category.Name.ToUpperInvariant(), Style = (Style)res["Caption"], VerticalOptions = LayoutOptions.Center });
+        head.Add(new Label { Text = category.Name.ToUpperInvariant(), Style = (Style)res["SectionLabel"], VerticalOptions = LayoutOptions.Center });
         head.Add(toggle, 1);
 
         return new Border

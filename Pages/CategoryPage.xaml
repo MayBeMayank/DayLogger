@@ -10,7 +10,7 @@
         <VerticalStackLayout Padding="16" Spacing="14">
             <Border Padding="12" Style="{StaticResource Section}">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="NAME" Style="{StaticResource Caption}" />
+                    <Label Text="NAME" Style="{StaticResource SectionLabel}" />
                     <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NameEntry" Placeholder="e.g. Meals, Travel, Bills" /></Border>
 
                     <Grid ColumnDefinitions="*,Auto">
@@ -19,7 +19,7 @@
                     </Grid>
                     <Label Text="Off lets you save an entry without an amount, like a meal you cooked." Style="{StaticResource Caption}" />
 
-                    <Label Text="SUBCATEGORIES" Style="{StaticResource Caption}" />
+                    <Label Text="SUBCATEGORIES" Style="{StaticResource SectionLabel}" />
                     <VerticalStackLayout x:Name="SubList" Spacing="6" />
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                         <Border Padding="12,6" Style="{StaticResource ControlBox}"><Entry x:Name="NewSubEntry" Placeholder="e.g. breakfast, lunch, dinner" ReturnType="Done" Completed="OnAddSubClicked" /></Border>
@@ -32,7 +32,7 @@
             </Border>
 
             <VerticalStackLayout x:Name="ExistingOnly" Spacing="14">
-                <Label Text="POSITION IN THE EXPENSES LIST" Style="{StaticResource Caption}" />
+                <Label Text="POSITION IN THE EXPENSES LIST" Style="{StaticResource SectionLabel}" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                     <Button Text="← EARLIER" Clicked="OnEarlierClicked" />
                     <Button Grid.Column="1" Text="LATER →" Clicked="OnLaterClicked" />

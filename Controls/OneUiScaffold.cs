@@ -80,6 +80,7 @@ public class OneUiScaffold : ContentView
         //_bar.SetDynamicResource(VisualElement.BackgroundColorProperty, "Paper");
         //_bar.Add(barLine);
 
+        _bigTitle.SetDynamicResource(Label.TextColorProperty, "Primary");
         _titles.Add(_bigTitle);
         _titles.Add(_bigSubtitle);
 
@@ -102,6 +103,7 @@ public class OneUiScaffold : ContentView
         Loaded += async (_, _) =>
         {
             HookPage();
+            _loaded.TrySetResult();
             // Pages that fill their list asynchronously call EnterAsync themselves; this is only the safety net.
             if (!ManualEntrance) await EnterAsync();
             else { await Task.Delay(1500); await EnterAsync(); }
@@ -112,6 +114,7 @@ public class OneUiScaffold : ContentView
     public bool ManualEntrance { get; set; }
 
     bool _entered, _entering, _left;
+    readonly TaskCompletionSource _loaded = new();
     Page? _page;
 
     // Coming back to the page (the one pushed on top was popped) replays the turnstile the other way round.
@@ -142,8 +145,18 @@ public class OneUiScaffold : ContentView
     {
         if (!_left || !_entered || _entering) return;
         _left = false;
-        // The elements hide synchronously inside TurnstileInAsync, before the page has finished sliding back.
-        _ = Motion.TurnstileInAsync(Elements(), forward: false);
+        _ = ReplayAsync();
+    }
+
+    async Task ReplayAsync()
+    {
+        _entering = true;
+        try
+        {
+            // The elements hide synchronously inside TurnstileInAsync, before the page has finished sliding back.
+            await Motion.TurnstileInAsync(Elements(), forward: false);
+        }
+        finally { _entering = false; }
     }
 
     List<View> Elements()
@@ -161,6 +174,9 @@ public class OneUiScaffold : ContentView
         if (_entered) return;
         _entered = true;
 
+        // Pages that fill their list in OnAppearing get here before the scaffold is on screen; flipping views that are not
+        // attached yet leaves the title turned, so the flip waits until it is loaded.
+        await _loaded.Task;
         var items = Elements();
 
         if (Motion.Reduced) { _bodyHost.Opacity = _asideHost.Opacity = 1; return; }
